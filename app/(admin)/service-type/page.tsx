@@ -1,8 +1,8 @@
 "use client";
 import React, { useState } from 'react';
 import { 
-  Settings2, Plus, Search, Edit2, 
-  Trash2, CheckCircle2, X, Save, Layers 
+  Settings2, Plus, Edit2, 
+  Trash2, X, Save 
 } from 'lucide-react';
 
 export default function ServiceTypeMaster() {
@@ -113,7 +113,7 @@ export default function ServiceTypeMaster() {
           </thead>
           <tbody className="divide-y divide-slate-50">
             {serviceTypes.map((item) => (
-              <tr key={item.id} className="hover:bg-slate-50/30 group transition-colors">
+              <tr key={item.id} className="hover:bg-slate-50/30 transition-colors">
                 <td className="px-8 py-5">
                   <span className="bg-blue-50 text-blue-600 px-3 py-1 rounded-lg text-[10px] font-black uppercase tracking-tighter">
                     {getDeptName(item.deptId)}
@@ -122,9 +122,21 @@ export default function ServiceTypeMaster() {
                 <td className="px-8 py-5 font-bold text-slate-800">{item.name}</td>
                 <td className="px-8 py-5 text-slate-500 font-bold">{item.days} Days</td>
                 <td className="px-8 py-5 text-right">
-                  <div className="flex justify-end gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
-                    <button onClick={() => handleEdit(item)} className="p-2 text-blue-600 hover:bg-blue-50 rounded-lg"><Edit2 size={18} /></button>
-                    <button onClick={() => handleDelete(item.id)} className="p-2 text-red-500 hover:bg-red-50 rounded-lg"><Trash2 size={18} /></button>
+                  <div className="flex justify-end gap-2">
+                    <button 
+                      onClick={() => handleEdit(item)} 
+                      className="p-2.5 text-blue-600 bg-blue-50/50 hover:bg-blue-600 hover:text-white rounded-xl transition-all duration-200"
+                      title="Edit"
+                    >
+                      <Edit2 size={16} />
+                    </button>
+                    <button 
+                      onClick={() => handleDelete(item.id)} 
+                      className="p-2.5 text-red-500 bg-red-50/50 hover:bg-red-500 hover:text-white rounded-xl transition-all duration-200"
+                      title="Delete"
+                    >
+                      <Trash2 size={16} />
+                    </button>
                   </div>
                 </td>
               </tr>

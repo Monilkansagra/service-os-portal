@@ -1,111 +1,146 @@
 "use client";
 import React, { useState } from 'react';
 import { 
-  Wrench, CheckCircle, Clock, AlertCircle, 
-  MessageSquare, ExternalLink, Send 
+  Wrench, CheckCircle2, Clock, 
+  MessageSquare, ChevronRight, Filter,
+  Search, AlertCircle, Loader2
 } from 'lucide-react';
 
 export default function TechnicianDashboard() {
-  const [selectedTask, setSelectedTask] = useState<any>(null);
+  // 1. Assigned Requests State (Sample Data)
+  const [requests, setRequests] = useState([
+    { id: 'SR-1001', type: 'Hardware Repair', priority: 'High', status: 'Pending', date: '2023-10-24', user: 'Monil Kansagra', desc: 'Printer not responding in IT Dept.' },
+    { id: 'SR-1002', type: 'Software Install', priority: 'Medium', status: 'In Progress', date: '2023-10-25', user: 'Rahul Shah', desc: 'Need MS Office activation on Room 402.' },
+    { id: 'SR-1003', type: 'Wiring Issue', priority: 'Urgent', status: 'In Progress', date: '2023-10-26', user: 'Amit Patel', desc: 'Main server room light flickering.' },
+  ]);
 
-  // Mock data representing ServiceRequest records assigned to this Tech
-  const myTasks = [
-    { id: 1, reqNo: 'REQ-IT-001', title: 'Keyboard Not Working', priority: 'Medium', date: '2023-11-05', status: 'Assigned' },
-    { id: 2, reqNo: 'REQ-IT-004', title: 'Server Down in Block A', priority: 'High', date: '2023-11-06', status: 'In Progress' },
-  ];
+  // 2. Status Update Function
+  const updateStatus = (id: string, newStatus: string) => {
+    setRequests(requests.map(req => 
+      req.id === id ? { ...req, status: newStatus } : req
+    ));
+  };
+
+  // Helper for Status Styles
+  const getStatusStyle = (status: string) => {
+    switch(status) {
+      case 'Pending': return 'bg-amber-50 text-amber-600 border-amber-100';
+      case 'In Progress': return 'bg-blue-50 text-blue-600 border-blue-100';
+      case 'Completed': return 'bg-emerald-50 text-emerald-600 border-emerald-100';
+      default: return 'bg-slate-50 text-slate-600';
+    }
+  };
 
   return (
-    <div className="p-6 space-y-6 bg-slate-50 min-h-screen">
-      {/* Header */}
-      <div className="flex justify-between items-center">
+    <div className="space-y-8 pb-10">
+      {/* Header Section */}
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-black text-slate-800 flex items-center gap-2">
-            <Wrench className="text-blue-600" /> Technician Portal
+          <h1 className="text-3xl font-black text-slate-900 flex items-center gap-3">
+            <Wrench className="text-blue-600" size={32} /> Technician Workspace
           </h1>
-          <p className="text-slate-500">Manage your assigned service tasks and updates</p>
+          <p className="text-slate-500 font-medium mt-1">Manage your assigned service tasks and updates</p>
         </div>
-        <div className="flex gap-2">
-          <div className="bg-white px-4 py-2 rounded-xl border font-bold text-blue-600 shadow-sm">
-            Total Tasks: 05
+        
+        <div className="flex items-center gap-3">
+          <div className="bg-white p-2 rounded-2xl border border-slate-100 shadow-sm flex items-center gap-2 px-4">
+            <Clock className="text-blue-500" size={18} />
+            <span className="text-sm font-black text-slate-700">Shift: 09:00 - 18:00</span>
           </div>
         </div>
       </div>
 
-      {/* Task Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        {myTasks.map((task) => (
-          <div key={task.id} className="bg-white rounded-[24px] border border-slate-100 p-6 shadow-sm hover:shadow-md transition-shadow">
-            <div className="flex justify-between items-start mb-4">
-              <span className={`px-3 py-1 rounded-lg text-[10px] font-black uppercase ${
-                task.priority === 'High' ? 'bg-red-50 text-red-600' : 'bg-blue-50 text-blue-600'
-              }`}>
-                {task.priority} Priority
-              </span>
-              <span className="text-xs text-slate-400 font-medium">{task.date}</span>
+      {/* Stats Quick View */}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+        {[
+          { label: 'Assigned', count: requests.length, icon: AlertCircle, color: 'text-blue-600', bg: 'bg-blue-50' },
+          { label: 'In Progress', count: requests.filter(r => r.status === 'In Progress').length, icon: Loader2, color: 'text-amber-600', bg: 'bg-amber-50' },
+          { label: 'Completed', count: requests.filter(r => r.status === 'Completed').length, icon: CheckCircle2, color: 'text-emerald-600', bg: 'bg-emerald-50' },
+        ].map((stat, i) => (
+          <div key={i} className="bg-white p-6 rounded-[32px] border border-slate-100 shadow-sm flex items-center gap-5">
+            <div className={`${stat.bg} ${stat.color} p-4 rounded-2xl`}>
+              <stat.icon size={24} />
             </div>
-            
-            <h3 className="font-bold text-slate-800 text-lg mb-1">{task.title}</h3>
-            <p className="text-sm text-slate-400 mb-6 font-mono">{task.reqNo}</p>
-
-            <div className="flex items-center gap-2 mb-6">
-              <div className="w-2 h-2 rounded-full bg-amber-400 animate-pulse"></div>
-              <span className="text-xs font-bold text-slate-600">Status: {task.status}</span>
+            <div>
+              <p className="text-[11px] font-black text-slate-400 uppercase tracking-widest">{stat.label}</p>
+              <h3 className="text-2xl font-black text-slate-900">{stat.count} Tasks</h3>
             </div>
-
-            <button 
-              onClick={() => setSelectedTask(task)}
-              className="w-full py-3 bg-slate-900 text-white rounded-xl font-bold flex items-center justify-center gap-2 hover:bg-blue-600 transition-colors"
-            >
-              Update Progress <ExternalLink size={16} />
-            </button>
           </div>
         ))}
       </div>
 
-      {/* Reply Modal - Connects to ServiceRequestReply table */}
-      {selectedTask && (
-        <div className="fixed inset-0 bg-slate-900/40 backdrop-blur-md flex items-center justify-center z-50 p-4">
-          <div className="bg-white w-full max-w-xl rounded-[32px] shadow-2xl p-8 space-y-6">
-            <div className="flex justify-between items-start">
-              <div>
-                <h2 className="text-xl font-black text-slate-800">Submit Resolution</h2>
-                <p className="text-sm text-slate-500">Reference: {selectedTask.reqNo}</p>
-              </div>
-              <button onClick={() => setSelectedTask(null)} className="text-slate-400 hover:text-slate-600 font-bold">Close</button>
-            </div>
-
-            <div className="space-y-4">
-              <div className="space-y-2">
-                <label className="text-xs font-black text-slate-400 uppercase tracking-widest ml-1">Current Status</label>
-                <select className="w-full p-4 bg-slate-50 border border-slate-100 rounded-2xl outline-none focus:ring-4 ring-blue-500/10 font-bold">
-                  <option>In Progress</option>
-                  <option>Waiting for Spare Parts</option>
-                  <option>Resolved / Completed</option>
-                </select>
-              </div>
-
-              <div className="space-y-2">
-                <label className="text-xs font-black text-slate-400 uppercase tracking-widest ml-1">Resolution Details (Reply Description)</label>
-                <textarea 
-                  className="w-full p-4 bg-slate-50 border border-slate-100 rounded-2xl outline-none h-32 resize-none"
-                  placeholder="Describe the work done or issues faced..."
-                />
-              </div>
-
-              <div className="p-4 bg-blue-50 rounded-2xl border border-blue-100 flex items-start gap-3">
-                <AlertCircle className="text-blue-600 mt-1" size={20} />
-                <p className="text-xs text-blue-700 leading-relaxed font-medium">
-                  Submitting a 'Resolved' status will notify the department head and the user that the request is fulfilled.
-                </p>
-              </div>
-            </div>
-
-            <button className="w-full bg-blue-600 text-white font-black py-4 rounded-2xl shadow-xl shadow-blue-200 flex items-center justify-center gap-2 hover:scale-[1.02] transition-transform">
-              Send Update <Send size={18} />
-            </button>
-          </div>
+      {/* Task List Section */}
+      <div className="space-y-4">
+        <div className="flex items-center justify-between px-2">
+          <h2 className="text-lg font-black text-slate-800">Your Active Tasks</h2>
+          <button className="text-blue-600 font-bold text-sm flex items-center gap-1 hover:underline">
+            <Filter size={16} /> Filter List
+          </button>
         </div>
-      )}
+
+        <div className="grid grid-cols-1 gap-4">
+          {requests.map((task) => (
+            <div key={task.id} className="bg-white rounded-[32px] border border-slate-100 p-6 shadow-sm hover:shadow-md transition-all group">
+              <div className="flex flex-col lg:flex-row justify-between gap-6">
+                
+                {/* Task Info */}
+                <div className="space-y-3 flex-1">
+                  <div className="flex items-center gap-3">
+                    <span className="text-[10px] font-black bg-slate-900 text-white px-3 py-1 rounded-full uppercase tracking-tighter">
+                      {task.id}
+                    </span>
+                    <span className={`text-[10px] font-black px-3 py-1 rounded-full uppercase border ${getStatusStyle(task.status)}`}>
+                      {task.status}
+                    </span>
+                    {task.priority === 'Urgent' && (
+                      <span className="animate-pulse bg-red-500 text-white text-[10px] font-black px-3 py-1 rounded-full uppercase">Urgent</span>
+                    )}
+                  </div>
+                  
+                  <div>
+                    <h3 className="text-xl font-black text-slate-800">{task.type}</h3>
+                    <p className="text-slate-500 text-sm font-medium mt-1">{task.desc}</p>
+                  </div>
+
+                  <div className="flex items-center gap-6 pt-2">
+                    <div className="flex items-center gap-2 text-slate-400 text-xs font-bold">
+                      <div className="w-6 h-6 rounded-full bg-blue-100 text-blue-600 flex items-center justify-center text-[10px]">MK</div>
+                      Requested by {task.user}
+                    </div>
+                    <div className="text-slate-400 text-xs font-bold flex items-center gap-1">
+                      <Clock size={14} /> Assigned on {task.date}
+                    </div>
+                  </div>
+                </div>
+
+                {/* Actions */}
+                <div className="flex flex-row lg:flex-col justify-end gap-3 min-w-[180px]">
+                  {task.status !== 'Completed' ? (
+                    <>
+                      <button 
+                        onClick={() => updateStatus(task.id, task.status === 'Pending' ? 'In Progress' : 'Completed')}
+                        className="flex-1 bg-blue-600 text-white font-black py-4 rounded-2xl text-xs flex items-center justify-center gap-2 hover:bg-blue-700 transition-colors shadow-lg shadow-blue-100"
+                      >
+                        {task.status === 'Pending' ? 'Start Task' : 'Mark as Done'}
+                        <ChevronRight size={16} />
+                      </button>
+                      <button className="flex-1 bg-slate-50 text-slate-600 font-bold py-4 rounded-2xl text-xs flex items-center justify-center gap-2 hover:bg-slate-100 transition-colors border border-slate-100">
+                        <MessageSquare size={16} /> Post Reply
+                      </button>
+                    </>
+                  ) : (
+                    <div className="flex flex-col items-center justify-center bg-emerald-50 border border-emerald-100 p-4 rounded-2xl w-full h-full">
+                      <CheckCircle2 className="text-emerald-500 mb-1" size={24} />
+                      <span className="text-emerald-700 font-black text-xs uppercase">Task Closed</span>
+                    </div>
+                  )}
+                </div>
+
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
     </div>
   );
 }
