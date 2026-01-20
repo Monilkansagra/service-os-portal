@@ -1,157 +1,216 @@
 "use client";
 import React, { useState } from 'react';
 import { 
-  Plus, Search, Clock, CheckCircle2, 
-  AlertCircle, Filter, Send, Image as ImageIcon,
-  ChevronRight, LayoutGrid
+  Plus, MessageSquare, Clock, CheckCircle2, 
+  Search, Filter, Send, Paperclip, X,
+  AlertCircle, History, ChevronRight
 } from 'lucide-react';
 
 export default function RequestorDashboard() {
-  const [isModalOpen, setIsModalOpen] = useState(false);
+  // 1. Mock Data for User's Requests
   const [requests, setRequests] = useState([
-    { id: 'SR-2005', subject: 'Printer not working', type: 'Hardware', dept: 'IT Support', status: 'Pending', date: '12 Jan 2026' },
-    { id: 'SR-2004', subject: 'AC making noise', type: 'Maintenance', dept: 'Electrical', status: 'In Progress', date: '10 Jan 2026' },
-    { id: 'SR-2001', subject: 'Software Update', type: 'Software', dept: 'IT Support', status: 'Completed', date: '05 Jan 2026' },
+    { 
+      id: "REQ-2024-001", 
+      title: "Laptop not starting", 
+      type: "Hardware", 
+      status: "In-Progress", 
+      priority: "High",
+      date: "2024-03-15",
+      replies: [
+        { from: "Technician", msg: "We have assigned Vijay to look into this.", time: "10:30 AM" },
+        { from: "System", msg: "Status changed to In-Progress", time: "11:00 AM" }
+      ]
+    },
+    { 
+      id: "REQ-2024-002", 
+      title: "WiFi Access Issue", 
+      type: "Network", 
+      status: "Pending", 
+      priority: "Medium",
+      date: "2024-03-16",
+      replies: []
+    }
   ]);
 
+  const [isNewRequestModal, setIsNewRequestModal] = useState(false);
+  const [selectedRequest, setSelectedRequest] = useState(null);
+
   return (
-    <div className="space-y-8">
-      {/* Upper Section */}
+    <div className="space-y-8 p-6 max-w-7xl mx-auto">
+      {/* Header & New Request Button */}
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
         <div>
-          <h1 className="text-3xl font-black text-slate-900 flex items-center gap-3">
-            <LayoutGrid className="text-blue-600" size={32} /> Portal Dashboard
-          </h1>
-          <p className="text-slate-500 font-medium">Welcome back! Raise and track your service requests.</p>
+          <h1 className="text-3xl font-black text-slate-900">Requestor Dashboard</h1>
+          <p className="text-slate-500 font-medium">Manage your service requests and track updates</p>
         </div>
         <button 
-          onClick={() => setIsModalOpen(true)}
-          className="bg-blue-600 text-white px-8 py-4 rounded-[24px] font-black flex items-center gap-2 shadow-xl shadow-blue-100 hover:bg-blue-700 transition-all active:scale-95"
+          onClick={() => setIsNewRequestModal(true)}
+          className="bg-blue-600 text-white px-8 py-4 rounded-[24px] font-black flex items-center gap-2 shadow-xl hover:scale-105 transition-all"
         >
           <Plus size={20} /> Raise New Request
         </button>
       </div>
 
-      {/* Stats Quick View */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-        {[
-          { label: 'Total', count: 12, color: 'text-slate-600', bg: 'bg-slate-50' },
-          { label: 'Pending', count: 3, color: 'text-amber-600', bg: 'bg-amber-50' },
-          { label: 'Active', count: 4, color: 'text-blue-600', bg: 'bg-blue-50' },
-          { label: 'Closed', count: 5, color: 'text-emerald-600', bg: 'bg-emerald-50' },
-        ].map((stat, i) => (
-          <div key={i} className={`${stat.bg} p-6 rounded-[32px] border border-white/50 shadow-sm`}>
-            <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">{stat.label}</p>
-            <h3 className={`text-2xl font-black ${stat.color}`}>{stat.count}</h3>
+      {/* Stats Cards */}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+        <div className="bg-blue-50 p-6 rounded-[32px] border border-blue-100">
+          <Clock className="text-blue-600 mb-4" size={24} />
+          <div className="text-3xl font-black text-blue-900">{requests.length}</div>
+          <div className="text-blue-600 font-bold text-sm uppercase">Total Requests</div>
+        </div>
+        <div className="bg-amber-50 p-6 rounded-[32px] border border-amber-100">
+          <AlertCircle className="text-amber-600 mb-4" size={24} />
+          <div className="text-3xl font-black text-amber-900">
+            {requests.filter(r => r.status === 'Pending').length}
           </div>
-        ))}
+          <div className="text-amber-600 font-bold text-sm uppercase">Waiting for Action</div>
+        </div>
+        <div className="bg-emerald-50 p-6 rounded-[32px] border border-emerald-100">
+          <CheckCircle2 className="text-emerald-600 mb-4" size={24} />
+          <div className="text-3xl font-black text-emerald-900">0</div>
+          <div className="text-emerald-600 font-bold text-sm uppercase">Resolved Tickets</div>
+        </div>
       </div>
 
-      {/* Request Tracking Table */}
+      {/* Search and List */}
       <div className="bg-white rounded-[40px] border border-slate-100 shadow-sm overflow-hidden">
-        <div className="p-8 border-b border-slate-50 flex flex-col md:flex-row justify-between gap-4">
-          <h2 className="text-xl font-black text-slate-800">Recent Requests</h2>
-          <div className="relative">
-            <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-300" size={18} />
-            <input 
-              type="text" 
-              placeholder="Search request ID..." 
-              className="pl-12 pr-6 py-3 bg-slate-50 border-none rounded-2xl text-sm font-bold w-full md:w-64 outline-none focus:ring-2 ring-blue-500/10"
-            />
+        <div className="p-8 border-b border-slate-50 flex justify-between items-center">
+          <h3 className="font-black text-xl text-slate-800 flex items-center gap-2">
+            <History className="text-blue-500" size={22} /> My Recent Requests
+          </h3>
+          <div className="flex gap-2">
+            <div className="relative hidden sm:block">
+              <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-300" size={16} />
+              <input type="text" placeholder="Search ID..." className="pl-10 pr-4 py-2 bg-slate-50 rounded-xl text-sm outline-none w-40" />
+            </div>
+            <button className="p-2 bg-slate-50 rounded-xl text-slate-400"><Filter size={20}/></button>
           </div>
         </div>
 
-        <div className="overflow-x-auto">
-          <table className="w-full text-left">
-            <thead className="bg-slate-50/50 text-[10px] font-black text-slate-400 uppercase tracking-[0.2em]">
-              <tr>
-                <th className="px-8 py-5">Request Details</th>
-                <th className="px-8 py-5">Department</th>
-                <th className="px-8 py-5">Status</th>
-                <th className="px-8 py-5 text-right">Action</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-slate-50">
-              {requests.map((req) => (
-                <tr key={req.id} className="hover:bg-slate-50/30 transition-colors group">
-                  <td className="px-8 py-6">
-                    <div className="flex flex-col">
-                      <span className="text-[10px] font-black text-blue-600 mb-1">{req.id}</span>
-                      <span className="font-bold text-slate-800">{req.subject}</span>
-                      <span className="text-xs text-slate-400 mt-1">Raised on {req.date}</span>
-                    </div>
-                  </td>
-                  <td className="px-8 py-6">
-                    <span className="text-xs font-bold text-slate-600 bg-slate-100 px-3 py-1 rounded-lg">
-                      {req.dept}
+        <div className="divide-y divide-slate-50">
+          {requests.map((req) => (
+            <div 
+              key={req.id} 
+              onClick={() => setSelectedRequest(req)}
+              className="p-6 hover:bg-slate-50 transition-all cursor-pointer group flex items-center justify-between"
+            >
+              <div className="flex items-center gap-6">
+                <div className={`w-14 h-14 rounded-2xl flex items-center justify-center font-black ${
+                  req.status === 'Pending' ? 'bg-amber-100 text-amber-600' : 'bg-blue-100 text-blue-600'
+                }`}>
+                  {req.type.charAt(0)}
+                </div>
+                <div>
+                  <div className="flex items-center gap-2 mb-1">
+                    <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">{req.id}</span>
+                    <span className={`text-[10px] px-2 py-0.5 rounded-md font-bold ${
+                      req.priority === 'High' ? 'bg-red-50 text-red-500' : 'bg-slate-100 text-slate-500'
+                    }`}>{req.priority}</span>
+                  </div>
+                  <h4 className="font-black text-slate-800 group-hover:text-blue-600 transition-colors">{req.title}</h4>
+                  <div className="flex items-center gap-4 mt-2">
+                    <span className="text-xs text-slate-400 font-bold flex items-center gap-1">
+                      <Clock size={12} /> {req.date}
                     </span>
-                  </td>
-                  <td className="px-8 py-6">
-                    <div className="flex items-center gap-2">
-                      <div className={`w-2 h-2 rounded-full ${
-                        req.status === 'Completed' ? 'bg-emerald-500' : 
-                        req.status === 'In Progress' ? 'bg-blue-500' : 'bg-amber-500'
-                      }`} />
-                      <span className="text-xs font-black text-slate-700">{req.status}</span>
-                    </div>
-                  </td>
-                  <td className="px-8 py-6 text-right">
-                    <button className="p-3 text-slate-400 hover:text-blue-600 hover:bg-blue-50 rounded-2xl transition-all">
-                      <ChevronRight size={20} />
-                    </button>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
+                    <span className="text-xs text-slate-400 font-bold flex items-center gap-1">
+                      <MessageSquare size={12} /> {req.replies.length} updates
+                    </span>
+                  </div>
+                </div>
+              </div>
+              <ChevronRight className="text-slate-200 group-hover:text-blue-400 transition-all" />
+            </div>
+          ))}
         </div>
       </div>
 
-      {/* New Request Modal */}
-      {isModalOpen && (
-        <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-          <div className="bg-white w-full max-w-2xl rounded-[45px] p-10 shadow-2xl space-y-8 animate-in zoom-in-95 duration-200">
-            <div className="flex justify-between items-center">
-              <h2 className="text-3xl font-black text-slate-900">New Service Request</h2>
-              <button onClick={() => setIsModalOpen(false)} className="bg-slate-50 p-3 rounded-full text-slate-400 hover:text-red-500 transition-colors">
-                <Plus size={24} className="rotate-45" />
-              </button>
+      {/* MODAL: New Request Form */}
+      {isNewRequestModal && (
+        <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-md flex items-center justify-center z-50 p-4">
+          <div className="bg-white w-full max-w-2xl rounded-[40px] shadow-2xl overflow-hidden">
+            <div className="p-8 border-b border-slate-100 flex justify-between items-center bg-slate-50/50">
+              <h2 className="text-2xl font-black text-slate-900">New Service Request</h2>
+              <button onClick={() => setIsNewRequestModal(false)} className="p-2 hover:bg-red-50 rounded-full text-slate-400 hover:text-red-500"><X size={24}/></button>
             </div>
-
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div className="p-8 grid grid-cols-1 md:grid-cols-2 gap-6">
               <div className="space-y-2">
-                <label className="text-[10px] font-black text-slate-400 uppercase ml-2 tracking-widest">Service Department</label>
-                <select className="w-full p-4 bg-slate-50 border-2 border-transparent rounded-2xl font-bold outline-none focus:bg-white focus:border-blue-500/20">
-                  <option>Choose Dept...</option>
-                  <option>IT Support</option>
-                  <option>Electrical</option>
-                </select>
-              </div>
-              <div className="space-y-2">
-                <label className="text-[10px] font-black text-slate-400 uppercase ml-2 tracking-widest">Request Type</label>
-                <select className="w-full p-4 bg-slate-50 border-2 border-transparent rounded-2xl font-bold outline-none focus:bg-white focus:border-blue-500/20">
-                  <option>Choose Category...</option>
+                <label className="text-xs font-black text-slate-400 uppercase ml-1">Request Category</label>
+                <select className="w-full p-4 bg-slate-50 rounded-2xl font-bold outline-none border-2 border-transparent focus:border-blue-500/20">
                   <option>Hardware Issue</option>
-                  <option>Software Installation</option>
+                  <option>Software Request</option>
+                  <option>Network/WiFi</option>
+                </select>
+              </div>
+              <div className="space-y-2">
+                <label className="text-xs font-black text-slate-400 uppercase ml-1">Priority Level</label>
+                <select className="w-full p-4 bg-slate-50 rounded-2xl font-bold outline-none border-2 border-transparent focus:border-blue-500/20">
+                  <option>Low</option>
+                  <option>Medium</option>
+                  <option>High</option>
                 </select>
               </div>
               <div className="md:col-span-2 space-y-2">
-                <label className="text-[10px] font-black text-slate-400 uppercase ml-2 tracking-widest">Brief Subject</label>
-                <input type="text" placeholder="e.g. Printer not responding in Room 101" className="w-full p-4 bg-slate-50 border-2 border-transparent rounded-2xl font-bold outline-none focus:bg-white focus:border-blue-500/20" />
+                <label className="text-xs font-black text-slate-400 uppercase ml-1">Brief Title</label>
+                <input className="w-full p-4 bg-slate-50 rounded-2xl font-bold outline-none border-2 border-transparent focus:border-blue-500/20" placeholder="e.g. Printer in Lab 2 not working" />
               </div>
               <div className="md:col-span-2 space-y-2">
-                <label className="text-[10px] font-black text-slate-400 uppercase ml-2 tracking-widest">Issue Description</label>
-                <textarea rows={3} placeholder="Provide details about the problem..." className="w-full p-4 bg-slate-50 border-2 border-transparent rounded-2xl font-bold outline-none focus:bg-white focus:border-blue-500/20 resize-none"></textarea>
+                <label className="text-xs font-black text-slate-400 uppercase ml-1">Detailed Description</label>
+                <textarea className="w-full p-4 bg-slate-50 rounded-2xl font-bold outline-none border-2 border-transparent focus:border-blue-500/20 h-32" placeholder="Describe your problem in detail..."></textarea>
               </div>
+              <div className="md:col-span-2 flex items-center gap-4 p-4 border-2 border-dashed border-slate-100 rounded-2xl hover:border-blue-200 transition-colors cursor-pointer">
+                <div className="w-10 h-10 bg-blue-50 text-blue-600 rounded-xl flex items-center justify-center"><Paperclip size={20}/></div>
+                <span className="text-sm font-bold text-slate-400">Attach photo or document (Optional)</span>
+              </div>
+              <button className="md:col-span-2 bg-blue-600 text-white py-5 rounded-[24px] font-black shadow-xl shadow-blue-100 hover:bg-slate-900 transition-all">Submit Request</button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* DRAWER: Communication History */}
+      {selectedRequest && (
+        <div className="fixed inset-y-0 right-0 w-full md:w-[450px] bg-white shadow-[-20px_0_60px_-15px_rgba(0,0,0,0.1)] z-50 flex flex-col animate-in slide-in-from-right duration-300">
+          <div className="p-8 border-b border-slate-100 flex justify-between items-center">
+            <div>
+              <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">{selectedRequest.id}</span>
+              <h3 className="text-xl font-black text-slate-900 leading-tight">{selectedRequest.title}</h3>
+            </div>
+            <button onClick={() => setSelectedRequest(null)} className="p-2 bg-slate-50 rounded-full text-slate-400 hover:text-red-500"><X size={24}/></button>
+          </div>
+          
+          <div className="flex-1 overflow-y-auto p-8 space-y-6">
+            <div className="flex items-center gap-3">
+              <span className={`px-3 py-1 rounded-full text-[10px] font-black uppercase ${
+                selectedRequest.status === 'Pending' ? 'bg-amber-50 text-amber-600' : 'bg-blue-50 text-blue-600'
+              }`}>{selectedRequest.status}</span>
+              <span className="text-xs text-slate-400 font-bold tracking-tight">Assigned to: IT Support Team</span>
             </div>
 
-            <div className="flex flex-col md:flex-row gap-4 pt-4">
-              <button className="flex-1 bg-slate-100 text-slate-600 font-black py-5 rounded-[24px] flex items-center justify-center gap-2 hover:bg-slate-200 transition-all">
-                <ImageIcon size={20} /> Attach Evidence
-              </button>
-              <button className="flex-1 bg-blue-600 text-white font-black py-5 rounded-[24px] flex items-center justify-center gap-2 shadow-xl shadow-blue-100 hover:bg-blue-700 transition-all">
-                <Send size={20} /> Submit Request
-              </button>
+            <div className="space-y-4 pt-4">
+              <h5 className="text-[10px] font-black text-slate-300 uppercase tracking-[0.2em]">Updates & Replies</h5>
+              {selectedRequest.replies.length > 0 ? (
+                selectedRequest.replies.map((reply, i) => (
+                  <div key={i} className={`p-4 rounded-2xl text-sm font-medium ${reply.from === 'Technician' ? 'bg-blue-50 text-blue-800' : 'bg-slate-50 text-slate-600'}`}>
+                    <div className="flex justify-between items-center mb-1">
+                      <span className="font-black text-[10px] uppercase">{reply.from}</span>
+                      <span className="text-[10px] opacity-50">{reply.time}</span>
+                    </div>
+                    {reply.msg}
+                  </div>
+                ))
+              ) : (
+                <div className="py-10 text-center space-y-2">
+                  <div className="w-12 h-12 bg-slate-50 rounded-full flex items-center justify-center mx-auto text-slate-200"><MessageSquare size={24}/></div>
+                  <p className="text-sm font-bold text-slate-300">No replies yet. Our team will update you soon.</p>
+                </div>
+              )}
+            </div>
+          </div>
+
+          <div className="p-8 border-t border-slate-100 bg-slate-50/50">
+            <div className="relative">
+              <input type="text" placeholder="Type a message..." className="w-full pl-6 pr-14 py-4 bg-white border border-slate-200 rounded-[24px] outline-none font-bold text-sm focus:ring-4 ring-blue-500/5 shadow-sm" />
+              <button className="absolute right-3 top-1/2 -translate-y-1/2 w-10 h-10 bg-blue-600 text-white rounded-full flex items-center justify-center hover:bg-slate-900 transition-all"><Send size={18}/></button>
             </div>
           </div>
         </div>

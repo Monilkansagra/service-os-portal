@@ -3,19 +3,18 @@ import React, { useState } from 'react';
 import { 
   UserCog, Plus, Link2, 
   Trash2, Search, Filter, 
-  ChevronRight, Save, X, 
-  UserCheck, ShieldCheck
+  Save, X, Edit3
 } from 'lucide-react';
 
 export default function RequestMappingMaster() {
-  // 1. Mock Data for Mapping
+  // 1. Static State for Mappings
   const [mappings, setMappings] = useState([
-    { id: 1, requestType: 'Hardware Repair', staffName: 'Rahul Sharma', role: 'Senior Technician', dept: 'IT Support' },
-    { id: 2, requestType: 'Software Install', staffName: 'Suresh Varma', role: 'Technician', dept: 'IT Support' },
-    { id: 3, requestType: 'AC Repair', staffName: 'Amit Patel', role: 'Maintenance Lead', dept: 'Maintenance' },
+    { id: 1, requestType: 'Hardware Repair', staffName: 'Rahul Sharma', role: 'Senior Technician' },
+    { id: 2, requestType: 'Software Install', staffName: 'Suresh Varma', role: 'Technician' },
+    { id: 3, requestType: 'AC Repair', staffName: 'Amit Patel', role: 'Maintenance Lead' },
   ]);
 
-  // 2. Data for Dropdowns
+  // Data for Dropdowns
   const [requestTypes] = useState(['Hardware Repair', 'Software Install', 'Network Issue', 'AC Repair', 'Wiring Issue']);
   const [staffList] = useState([
     { name: 'Rahul Sharma', role: 'Senior Technician' },
@@ -25,33 +24,59 @@ export default function RequestMappingMaster() {
   ]);
 
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [editingId, setEditingId] = useState(null);
   const [formData, setFormData] = useState({ requestType: '', staffName: '' });
 
+  // Create or Update
   const handleSave = () => {
     if (!formData.requestType || !formData.staffName) return;
     
     const staffInfo = staffList.find(s => s.name === formData.staffName);
-    const newMapping = {
-      id: Date.now(),
-      requestType: formData.requestType,
-      staffName: formData.staffName,
-      role: staffInfo?.role || 'Staff',
-      dept: 'General' // Simplified for demo
-    };
-
-    setMappings([...mappings, newMapping]);
-    setIsModalOpen(false);
-    setFormData({ requestType: '', staffName: '' });
+    
+    if (editingId) {
+      // Update existing mapping
+      setMappings(mappings.map(m => m.id === editingId ? { 
+        ...m, 
+        requestType: formData.requestType, 
+        staffName: formData.staffName,
+        role: staffInfo?.role || 'Staff'
+      } : m));
+    } else {
+      // Create new mapping
+      const newMapping = {
+        id: Date.now(),
+        requestType: formData.requestType,
+        staffName: formData.staffName,
+        role: staffInfo?.role || 'Staff'
+      };
+      setMappings([...mappings, newMapping]);
+    }
+    
+    closeModal();
   };
 
-  const deleteMapping = (id: number) => {
+  // Open Edit Modal
+  const handleEdit = (item) => {
+    setFormData({ requestType: item.requestType, staffName: item.staffName });
+    setEditingId(item.id);
+    setIsModalOpen(true);
+  };
+
+  // Delete Mapping
+  const deleteMapping = (id) => {
     if(confirm("Remove this mapping?")) {
       setMappings(mappings.filter(m => m.id !== id));
     }
   };
 
+  const closeModal = () => {
+    setIsModalOpen(false);
+    setEditingId(null);
+    setFormData({ requestType: '', staffName: '' });
+  };
+
   return (
-    <div className="space-y-8">
+    <div className="space-y-8 p-6">
       {/* Header Section */}
       <div className="flex flex-col md:flex-row justify-between items-center gap-4">
         <div>
@@ -62,7 +87,7 @@ export default function RequestMappingMaster() {
         </div>
         <button 
           onClick={() => setIsModalOpen(true)}
-          className="bg-slate-900 text-white px-8 py-4 rounded-[24px] font-black flex items-center gap-2 shadow-xl shadow-slate-200 hover:bg-blue-600 transition-all active:scale-95"
+          className="bg-slate-900 text-white px-8 py-4 rounded-[24px] font-black flex items-center gap-2 shadow-xl hover:bg-blue-600 transition-all active:scale-95"
         >
           <Plus size={20} /> New Assignment
         </button>
@@ -118,11 +143,11 @@ export default function RequestMappingMaster() {
                       {item.role}
                     </span>
                   </td>
-                  <td className="px-8 py-6 text-right">
-                    <button 
-                      onClick={() => deleteMapping(item.id)}
-                      className="p-3 text-slate-300 hover:text-red-500 hover:bg-red-50 rounded-xl transition-all"
-                    >
+                  <td className="px-8 py-6 text-right space-x-2">
+                    <button onClick={() => handleEdit(item)} className="p-3 text-slate-300 hover:text-blue-600 transition-all">
+                      <Edit3 size={18} />
+                    </button>
+                    <button onClick={() => deleteMapping(item.id)} className="p-3 text-slate-300 hover:text-red-500 transition-all">
                       <Trash2 size={18} />
                     </button>
                   </td>
@@ -133,13 +158,13 @@ export default function RequestMappingMaster() {
         </div>
       </div>
 
-      {/* Modal for New Mapping */}
+      {/* Modal for New/Edit Mapping */}
       {isModalOpen && (
         <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-md flex items-center justify-center z-50 p-6">
-          <div className="bg-white w-full max-w-md rounded-[45px] p-10 space-y-8 shadow-2xl animate-in zoom-in-95 duration-300">
+          <div className="bg-white w-full max-w-md rounded-[45px] p-10 space-y-8 shadow-2xl">
             <div className="flex justify-between items-center">
-              <h2 className="text-2xl font-black text-slate-900">Map Responsibility</h2>
-              <button onClick={() => setIsModalOpen(false)} className="bg-slate-50 p-2 rounded-full text-slate-400 hover:text-red-500 transition-colors">
+              <h2 className="text-2xl font-black text-slate-900">{editingId ? 'Update Mapping' : 'Map Responsibility'}</h2>
+              <button onClick={closeModal} className="bg-slate-50 p-2 rounded-full text-slate-400 hover:text-red-500 transition-colors">
                 <X size={24} />
               </button>
             </div>
@@ -172,9 +197,9 @@ export default function RequestMappingMaster() {
 
             <button 
               onClick={handleSave}
-              className="w-full bg-blue-600 text-white font-black py-5 rounded-[24px] flex items-center justify-center gap-2 shadow-xl shadow-blue-100 hover:bg-blue-700 transition-all"
+              className="w-full bg-blue-600 text-white font-black py-5 rounded-[24px] flex items-center justify-center gap-2 shadow-xl hover:bg-blue-700 transition-all"
             >
-              <Save size={20} /> Finalize Mapping
+              <Save size={20} /> {editingId ? 'Update Assignment' : 'Finalize Mapping'}
             </button>
           </div>
         </div>
