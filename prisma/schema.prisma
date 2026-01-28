@@ -1,6 +1,3 @@
-// This is your Prisma schema file,
-// learn more about it in the docs: https://pris.ly/d/prisma-schema
-
 generator client {
   provider = "prisma-client-js"
 }
@@ -8,4 +5,217 @@ generator client {
 datasource db {
   provider = "mysql"
   url      = env("DATABASE_URL")
+}
+
+model roles {
+  role_id   Int     @id @default(autoincrement())
+  role_name String  @unique(map: "role_name") @db.VarChar(50)
+  users     users[]
+}
+
+model service_department {
+  dept_id                   Int                         @id @default(autoincrement())
+  dept_name                 String                      @db.VarChar(150)
+  campus_id                 Int
+  description               String?                     @db.Text
+  cc_email_to_csv           String?                     @db.VarChar(250)
+  is_request_title_disable  Boolean?                    @default(dbgenerated("b'0'")) @db.Bit(1)
+  user_id                   Int
+  created                   DateTime                    @db.DateTime(0)
+  modified                  DateTime                    @db.DateTime(0)
+  service_department_person service_department_person[]
+  service_request_type      service_request_type[]
+}
+
+model service_department_person {
+  dept_person_id     Int                @id @default(autoincrement())
+  dept_id            Int
+  user_id            Int
+  is_hod             Boolean?           @default(false)
+  active_from        DateTime           @db.Date
+  active_to          DateTime?          @db.Date
+  service_department service_department @relation(fields: [dept_id], references: [dept_id], onDelete: NoAction, onUpdate: NoAction, map: "fk_dept_person_dept")
+  users              users              @relation(fields: [user_id], references: [user_id], onDelete: NoAction, onUpdate: NoAction, map: "fk_dept_person_user")
+
+  @@index([dept_id], map: "fk_dept_person_dept")
+  @@index([user_id], map: "fk_dept_person_user")
+}
+
+model service_request {
+  request_id                                       Int                          @id @default(autoincrement())
+  request_no                                       String                       @unique(map: "request_no") @db.VarChar(50)
+  request_datetime                                 DateTime?                    @default(now()) @db.Timestamp(0)
+  request_type_id                                  Int
+  request_title                                    String                       @db.VarChar(250)
+  request_description                              String                       @db.Text
+  status_id                                        Int
+  service_request_status_datetime                  DateTime?                    @db.DateTime(0)
+  priority_level                                   String?                      @db.VarChar(50)
+  assigned_to_user_id                              Int?
+  created_by_user_id                               Int
+  service_request_status_by_user_id                Int?
+  service_request_status_description               String?                      @db.VarChar(500)
+  approval_status_datetime                         DateTime?                    @db.DateTime(0)
+  approval_status_by_user_id                       Int?
+  approval_status_description                      String?                      @db.VarChar(250)
+  assigned_datetime                                DateTime?                    @db.DateTime(0)
+  assigned_by_user_id                              Int?
+  assigned_description                             String?                      @db.VarChar(250)
+  resource_id                                      Int?
+  on_behalf_of_staff_id                            Int?
+  student_id                                       Int?
+  attachment_path_2                                String?                      @db.VarChar(250)
+  attachment_path_3                                String?                      @db.VarChar(250)
+  attachment_path_4                                String?                      @db.VarChar(250)
+  attachment_path_5                                String?                      @db.VarChar(250)
+  user_id                                          Int
+  created                                          DateTime                     @db.DateTime(0)
+  modified                                         DateTime                     @db.DateTime(0)
+  users_service_request_assigned_to_user_idTousers users?                       @relation("service_request_assigned_to_user_idTousers", fields: [assigned_to_user_id], references: [user_id], onDelete: NoAction, onUpdate: NoAction, map: "fk_request_assigned_user")
+  users_service_request_created_by_user_idTousers  users                        @relation("service_request_created_by_user_idTousers", fields: [created_by_user_id], references: [user_id], onDelete: NoAction, onUpdate: NoAction, map: "fk_request_created_user")
+  service_request_status                           service_request_status       @relation(fields: [status_id], references: [status_id], onDelete: NoAction, onUpdate: NoAction, map: "fk_request_status")
+  service_request_type                             service_request_type         @relation(fields: [request_type_id], references: [request_type_id], onDelete: NoAction, onUpdate: NoAction, map: "fk_request_type")
+  service_request_approval                         service_request_approval[]
+  service_request_attachment                       service_request_attachment[]
+  service_request_reply                            service_request_reply[]
+
+  @@index([assigned_to_user_id], map: "fk_request_assigned_user")
+  @@index([created_by_user_id], map: "fk_request_created_user")
+  @@index([status_id], map: "fk_request_status")
+  @@index([request_type_id], map: "fk_request_type")
+}
+
+model service_request_approval {
+  approval_id         Int             @id @default(autoincrement())
+  request_id          Int
+  approved_by_user_id Int?
+  approval_status     String?         @db.VarChar(50)
+  approval_datetime   DateTime?       @db.Timestamp(0)
+  remarks             String?         @db.Text
+  service_request     service_request @relation(fields: [request_id], references: [request_id], onDelete: NoAction, onUpdate: NoAction, map: "fk_approval_request")
+  users               users?          @relation(fields: [approved_by_user_id], references: [user_id], onDelete: NoAction, onUpdate: NoAction, map: "fk_approval_user")
+
+  @@index([request_id], map: "fk_approval_request")
+  @@index([approved_by_user_id], map: "fk_approval_user")
+}
+
+model service_request_attachment {
+  attachment_id      Int             @id @default(autoincrement())
+  request_id         Int
+  file_path          String          @db.VarChar(300)
+  original_file_name String?         @db.VarChar(250)
+  uploaded_at        DateTime?       @default(now()) @db.Timestamp(0)
+  service_request    service_request @relation(fields: [request_id], references: [request_id], onDelete: Cascade, onUpdate: NoAction, map: "fk_attachment_request")
+
+  @@index([request_id], map: "fk_attachment_request")
+}
+
+model service_request_reply {
+  reply_id                           Int                    @id @default(autoincrement())
+  request_id                         Int
+  replied_by_user_id                 Int?
+  reply_datetime                     DateTime?              @default(now()) @db.Timestamp(0)
+  reply_text                         String?                @db.Text
+  status_id                          Int
+  service_request_status_by_user_id  Int
+  service_request_status_description String?                @db.VarChar(250)
+  attachment_file_original_name      String?                @db.VarChar(250)
+  service_request_type_id            Int?
+  student_id                         Int?
+  user_id                            Int
+  created                            DateTime               @db.DateTime(0)
+  modified                           DateTime               @db.DateTime(0)
+  service_request                    service_request        @relation(fields: [request_id], references: [request_id], onDelete: Cascade, onUpdate: NoAction, map: "fk_reply_request")
+  service_request_status             service_request_status @relation(fields: [status_id], references: [status_id], onDelete: NoAction, onUpdate: NoAction, map: "fk_reply_status")
+  users                              users?                 @relation(fields: [replied_by_user_id], references: [user_id], onDelete: NoAction, onUpdate: NoAction, map: "fk_reply_user")
+
+  @@index([request_id], map: "fk_reply_request")
+  @@index([status_id], map: "fk_reply_status")
+  @@index([replied_by_user_id], map: "fk_reply_user")
+}
+
+model service_request_status {
+  status_id                     Int                     @id @default(autoincrement())
+  status_name                   String                  @unique(map: "status_name") @db.VarChar(100)
+  status_system_name            String                  @db.VarChar(100)
+  sequence                      Int
+  is_open                       Boolean?                @default(true)
+  is_allowed_for_technician     Boolean?                @default(true)
+  is_no_further_action_required Boolean?                @default(dbgenerated("b'0'")) @db.Bit(1)
+  description                   String?                 @db.VarChar(250)
+  status_css_class              String?                 @db.VarChar(250)
+  user_id                       Int
+  created                       DateTime                @db.DateTime(0)
+  modified                      DateTime                @db.DateTime(0)
+  service_request               service_request[]
+  service_request_reply         service_request_reply[]
+}
+
+model service_request_type {
+  request_type_id                Int                           @id @default(autoincrement())
+  service_type_id                Int
+  dept_id                        Int
+  request_type_name              String                        @db.VarChar(150)
+  description                    String?                       @db.VarChar(250)
+  default_priority               String?                       @db.VarChar(50)
+  sequence                       Decimal?                      @db.Decimal(18, 2)
+  request_total                  Int?                          @default(0)
+  request_pending                Int?                          @default(0)
+  request_closed                 Int?                          @default(0)
+  request_cancelled              Int?                          @default(0)
+  is_visible_resource            Boolean?                      @default(dbgenerated("b'0'")) @db.Bit(1)
+  reminder_days_after_assignment Int?
+  is_mandatory_resource          Boolean?                      @default(dbgenerated("b'0'")) @db.Bit(1)
+  user_id                        Int
+  created                        DateTime                      @db.DateTime(0)
+  modified                       DateTime                      @db.DateTime(0)
+  service_request                service_request[]
+  service_department             service_department            @relation(fields: [dept_id], references: [dept_id], onDelete: NoAction, onUpdate: NoAction, map: "fk_request_type_dept")
+  service_type                   service_type                  @relation(fields: [service_type_id], references: [service_type_id], onDelete: NoAction, onUpdate: NoAction, map: "fk_request_type_service")
+  service_request_type_person    service_request_type_person[]
+
+  @@index([dept_id], map: "fk_request_type_dept")
+  @@index([service_type_id], map: "fk_request_type_service")
+}
+
+model service_request_type_person {
+  id                   Int                  @id @default(autoincrement())
+  request_type_id      Int
+  user_id              Int
+  service_request_type service_request_type @relation(fields: [request_type_id], references: [request_type_id], onDelete: NoAction, onUpdate: NoAction, map: "fk_request_type_person_type")
+  users                users                @relation(fields: [user_id], references: [user_id], onDelete: NoAction, onUpdate: NoAction, map: "fk_request_type_person_user")
+
+  @@index([request_type_id], map: "fk_request_type_person_type")
+  @@index([user_id], map: "fk_request_type_person_user")
+}
+
+model service_type {
+  service_type_id      Int                    @id @default(autoincrement())
+  service_type_name    String                 @db.VarChar(150)
+  description          String?                @db.VarChar(250)
+  sequence             Decimal?               @db.Decimal(18, 2)
+  is_for_staff         Boolean?               @default(dbgenerated("b'1'")) @db.Bit(1)
+  is_for_student       Boolean?               @default(dbgenerated("b'1'")) @db.Bit(1)
+  user_id              Int
+  created              DateTime               @db.DateTime(0)
+  modified             DateTime               @db.DateTime(0)
+  service_request_type service_request_type[]
+}
+
+model users {
+  user_id                                                    Int                           @id @default(autoincrement())
+  full_name                                                  String                        @db.VarChar(150)
+  email                                                      String                        @unique(map: "email") @db.VarChar(150)
+  role_id                                                    Int
+  is_active                                                  Boolean?                      @default(true)
+  created_at                                                 DateTime?                     @default(now()) @db.Timestamp(0)
+  service_department_person                                  service_department_person[]
+  service_request_service_request_assigned_to_user_idTousers service_request[]             @relation("service_request_assigned_to_user_idTousers")
+  service_request_service_request_created_by_user_idTousers  service_request[]             @relation("service_request_created_by_user_idTousers")
+  service_request_approval                                   service_request_approval[]
+  service_request_reply                                      service_request_reply[]
+  service_request_type_person                                service_request_type_person[]
+  roles                                                      roles                         @relation(fields: [role_id], references: [role_id], onDelete: NoAction, onUpdate: NoAction, map: "fk_users_role")
+
+  @@index([role_id], map: "fk_users_role")
 }

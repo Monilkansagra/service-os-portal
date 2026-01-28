@@ -24,7 +24,7 @@ export default function AdminSidebar() {
     { name: 'Service Type', icon: <Settings2 size={20} />, href: '/service-type' },
     { name: 'Status Master', icon: <Fingerprint size={20} />, href: '/status-master' },
     { name: 'Type Mapping', icon: <Map size={20} />, href: '/type-mapping' },
-    { name: 'Request Mapping', icon: <Map size={20} />,href : '/request-mapping' },
+    // { name: 'Request Mapping', icon: <Map size={20} />,href : '/request-mapping' },
     { name: 'person-master', icon: <Map size={20} />,href : '/department-person-master' }, 
   ];
 
