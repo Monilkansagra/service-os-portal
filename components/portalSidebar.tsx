@@ -8,8 +8,8 @@ export default function PortalSidebar() {
   const pathname = usePathname();
 
   // --- LOGOUT FUNCTION ---
-  const handleLogout = () => {
-    document.cookie = "user_role=; path=/; expires=Thu, 01 Jan 1970 00:00:00 UTC;";
+  const handleLogout = async () => {
+    await fetch("/api/auth/logout", { method: "POST" });
     window.location.href = "/login";
   };
 
@@ -20,31 +20,30 @@ export default function PortalSidebar() {
   ];
 
   return (
-    <aside className="fixed left-0 top-0 h-screen w-64 bg-white border-r border-slate-100 flex flex-col z-50">
-      <div className="p-8 flex items-center gap-3">
-        <div className="bg-blue-600 p-2.5 rounded-2xl text-white shadow-xl shadow-blue-200">
-          <Zap size={22} fill="currentColor" />
+    <aside className="fixed left-0 top-0 h-screen w-64 bg-gradient-to-b from-blue-50 to-indigo-50 border-r-2 border-indigo-200 flex flex-col z-50 shadow-lg animate-in-left">
+      <div className="p-8 flex items-center gap-3 border-b-2 border-indigo-200 bg-white backdrop-blur">
+        <div className="bg-gradient-to-br from-blue-500 to-indigo-600 p-2.5 rounded-xl text-white shadow-lg">
+          <Zap size={24} fill="currentColor" />
         </div>
-        <span className="text-2xl font-black text-slate-800 tracking-tighter">Service<span className="text-blue-600">OS</span></span>
+        <span className="text-2xl font-black text-slate-900 tracking-tighter">Service<span className="text-indigo-600">OS</span></span>
       </div>
 
-      <nav className="flex-1 px-4 space-y-2 mt-4">
-        <p className="px-6 text-[10px] font-black text-slate-400 uppercase tracking-[0.3em] mb-4">User Menu</p>
+      <nav className="flex-1 px-4 py-6 space-y-2 overflow-y-auto custom-scrollbar">
+        <p className="px-6 text-[10px] font-black text-indigo-600 uppercase tracking-[0.3em] mb-4">User Menu</p>
         {menuItems.map((item) => (
           <Link key={item.href} href={item.href}
-            className={`flex items-center gap-4 px-6 py-4 rounded-[24px] text-sm font-black transition-all ${
-              pathname === item.href ? 'bg-blue-600 text-white shadow-xl' : 'text-slate-400 hover:bg-slate-50 hover:text-blue-600'
-            }`}
+            className={`flex items-center gap-4 px-6 py-4 rounded-2xl text-sm font-bold transition-all duration-300 ${pathname === item.href ? 'bg-indigo-600 text-white shadow-lg sidebar-item-active' : 'text-slate-700 hover:bg-indigo-100 hover:text-indigo-700'
+              }`}
           >
             {item.icon} {item.name}
           </Link>
         ))}
       </nav>
 
-      <div className="p-6 border-t border-slate-50">
-        <button 
+      <div className="p-6 border-t-2 border-indigo-200 bg-white backdrop-blur">
+        <button
           onClick={handleLogout}
-          className="flex items-center justify-center gap-3 w-full px-4 py-4 bg-slate-900 text-white rounded-[20px] transition-all font-black text-xs uppercase tracking-widest hover:bg-red-500 shadow-lg"
+          className="flex items-center justify-center gap-3 w-full px-4 py-3 bg-gradient-to-r from-slate-900 to-slate-800 text-white rounded-xl transition-all font-bold text-sm uppercase tracking-widest hover:from-red-600 hover:to-red-700 shadow-lg hover:shadow-xl"
         >
           <LogOut size={16} /> Sign Out
         </button>

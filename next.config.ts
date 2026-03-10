@@ -1,7 +1,10 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
-  /* config options here */
+  turbopack: {
+    // Use the process working directory to correctly identify workspace root
+    root: process.cwd(),
+  },
 };
 
 export default nextConfig;

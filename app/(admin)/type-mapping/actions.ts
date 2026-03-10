@@ -33,7 +33,7 @@ export async function createAssignment(formData: FormData) {
       }
     });
 
-    revalidatePath("/auto-assignment");
+    revalidatePath("/type-mapping");
     return { success: true, message: "Assignment Created Successfully" };
   } catch (error: any) {
     console.error("Assignment Error:", error);
@@ -47,7 +47,7 @@ export async function deleteAssignment(id: number) {
     await db.service_request_type_person.delete({
       where: { id: Number(id) },
     });
-    revalidatePath("/auto-assignment");
+    revalidatePath("/type-mapping");
     return { success: true, message: "Assignment Removed" };
   } catch (error: any) {
     return { success: false, message: "Delete failed: " + error.message };

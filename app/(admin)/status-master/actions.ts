@@ -22,19 +22,19 @@ export async function createStatus(formData: any) {
         description: formData.description || null,
         status_css_class: formData.color, // Storing Tailwind class here
         is_open: formData.is_open,
-        
+
         // Default System Fields
         user_id: 1, // Default System User
         created: new Date(),
         modified: new Date(),
-        
+
         // Optional Booleans (Defaults)
         is_allowed_for_technician: true,
         is_no_further_action_required: false
       }
     });
 
-    revalidatePath("/status");
+    revalidatePath("/status-master");
     return { success: true, message: "Status Created Successfully" };
   } catch (error: any) {
     console.error("Create Status Error:", error);
@@ -60,7 +60,7 @@ export async function updateStatus(status_id: number, formData: any) {
       }
     });
 
-    revalidatePath("/status");
+    revalidatePath("/status-master");
     return { success: true, message: "Status Updated Successfully" };
   } catch (error: any) {
     console.error("Update Status Error:", error);
@@ -74,7 +74,7 @@ export async function deleteStatus(status_id: number) {
     await db.service_request_status.delete({
       where: { status_id: Number(status_id) },
     });
-    revalidatePath("/status");
+    revalidatePath("/status-master");
     return { success: true, message: "Status Deleted Successfully" };
   } catch (error: any) {
     if (error.code === 'P2003') {

@@ -3,64 +3,59 @@
 import { db } from "@/lib/db";
 import { revalidatePath } from "next/cache";
 
-// 1. READ (Fetch All)
-// We don't export this because we use it in page.tsx directly, 
-// but we keep actions here for mutations.
-
-// 2. CREATE
-export async function createDepartment(formData: any) {
+/**
+ * Creates or updates a department directly using Prisma.
+ * Bypassing the local fetch ensures reliability across different environments.
+ */
+export async function upsertDepartment(id: number | null, data: any) {
   try {
-    await db.service_department.create({
-      data: {
-        dept_name: formData.dept_name,
-        campus_id: Number(formData.campus_id),
-        description: formData.description,
-        cc_email_to_csv: formData.cc_email_to_csv,
-        is_request_title_disable: formData.is_request_title_disable,
-        // Hardcoded System Fields (Since we don't have Auth yet)
-        user_id: 1, 
-        created: new Date(),
-        modified: new Date(),
-      },
-    });
-    revalidatePath("/dept-master"); // Refresh the UI
-    return { success: true, message: "Department Created Successfully" };
-  } catch (error) {
-    console.error(error);
-    return { success: false, message: "Failed to create department" };
-  }
-}
+    const departmentData = {
+      dept_name: data.dept_name,
+      campus_id: Number(data.campus_id),
+      description: data.description,
+      cc_email_to_csv: data.cc_email_to_csv,
+      is_request_title_disable: data.is_request_title_disable ?? false,
+      user_id: Number(data.user_id) || 1,
+      modified: new Date(),
+    };
 
-// 3. UPDATE
-export async function updateDepartment(dept_id: number, formData: any) {
-  try {
-    await db.service_department.update({
-      where: { dept_id: dept_id },
-      data: {
-        dept_name: formData.dept_name,
-        campus_id: Number(formData.campus_id),
-        description: formData.description,
-        cc_email_to_csv: formData.cc_email_to_csv,
-        is_request_title_disable: formData.is_request_title_disable,
-        modified: new Date(), // Update modified time
-      },
-    });
+    if (id) {
+      // Update existing
+      await db.service_department.update({
+        where: { dept_id: Number(id) },
+        data: departmentData,
+      });
+    } else {
+      // Create new
+      await db.service_department.create({
+        data: {
+          ...departmentData,
+          created: new Date(),
+        },
+      });
+    }
+
     revalidatePath("/dept-master");
-    return { success: true, message: "Department Updated" };
+    return { success: true };
   } catch (error) {
-    return { success: false, message: "Failed to update" };
+    console.error("UPSERT_DEPARTMENT_ERROR:", error);
+    return { success: false, error: error instanceof Error ? error.message : "Unknown error" };
   }
 }
 
-// 4. DELETE
-export async function deleteDepartment(dept_id: number) {
+/**
+ * Deletes a department directly using Prisma.
+ */
+export async function deleteDepartment(id: number) {
   try {
     await db.service_department.delete({
-      where: { dept_id: dept_id },
+      where: { dept_id: Number(id) },
     });
+
     revalidatePath("/dept-master");
-    return { success: true, message: "Department Deleted" };
+    return { success: true };
   } catch (error) {
-    return { success: false, message: "Failed to delete" };
+    console.error("DELETE_DEPARTMENT_ERROR:", error);
+    return { success: false, error: error instanceof Error ? error.message : "Likely has linked records." };
   }
 }

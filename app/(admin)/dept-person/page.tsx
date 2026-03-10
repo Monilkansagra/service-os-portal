@@ -1,8 +1,9 @@
+export const dynamic = "force-dynamic";
 import { db } from "@/lib/db";
 import DeptPersonClient from "./client";
 
 export default async function DeptPersonPage() {
-  
+
   // 1. Fetch mappings with Correct Primary Key in Sort
   const mappings = await db.service_department_person.findMany({
     include: {
@@ -11,7 +12,7 @@ export default async function DeptPersonPage() {
       },
       service_department: true
     },
-    orderBy: { 
+    orderBy: {
       dept_person_id: 'desc' // FIX: Changed 'id' to 'dept_person_id' 
     }
   });
@@ -23,19 +24,18 @@ export default async function DeptPersonPage() {
 
   // 3. Fetch Users
   const users = await db.users.findMany({
-    select: { 
-        user_id: true, 
-        full_name: true, 
-        roles: { select: { role_name: true } } 
+    select: {
+      user_id: true,
+      full_name: true,
+      roles: { select: { role_name: true } }
     }
   });
 
   return (
-    // @ts-ignore
-    <DeptPersonClient 
-      initialData={mappings} 
-      departments={departments} 
-      users={users} 
+    <DeptPersonClient
+      initialData={mappings as any}
+      departments={departments as any}
+      users={users as any}
     />
   );
 }

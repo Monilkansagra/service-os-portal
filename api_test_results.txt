@@ -1,0 +1,24 @@
+﻿Starting API Tests...
+
+Γ£à http://localhost:3000/api/departments              | Status: 200 | Time: 57ms
+   ΓööΓöÇ Response: 13 items returned
+Γ£à http://localhost:3000/api/users                    | Status: 200 | Time: 9ms
+   ΓööΓöÇ Response: 8 items returned
+Γ£à http://localhost:3000/api/requests                 | Status: 200 | Time: 9ms
+   ΓööΓöÇ Response: 10 items returned
+Γ£à http://localhost:3000/api/service-type             | Status: 200 | Time: 6ms
+   ΓööΓöÇ Response: 10 items returned
+Γ£à http://localhost:3000/api/status-master            | Status: 200 | Time: 6ms
+   ΓööΓöÇ Response: 10 items returned
+Γ£à http://localhost:3000/api/roles                    | Status: 200 | Time: 5ms
+   ΓööΓöÇ Response: 10 items returned
+Γ£à http://localhost:3000/api/request-types            | Status: 200 | Time: 7ms
+   ΓööΓöÇ Response: 10 items returned
+Γ£à http://localhost:3000/api/request-reply            | Status: 200 | Time: 7ms
+   ΓööΓöÇ Response: 10 items returned
+Γ£à http://localhost:3000/api/dept-person              | Status: 200 | Time: 8ms
+   ΓööΓöÇ Response: 8 items returned
+Γ£à http://localhost:3000/api/status                   | Status: 200 | Time: 6ms
+   ΓööΓöÇ Response: 10 items returned
+Γ£à http://localhost:3000/api/type-mapping             | Status: 200 | Time: 7ms
+   ΓööΓöÇ Response: 1 items returned

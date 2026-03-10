@@ -206,6 +206,7 @@ model users {
   user_id                                                    Int                           @id @default(autoincrement())
   full_name                                                  String                        @db.VarChar(150)
   email                                                      String                        @unique(map: "email") @db.VarChar(150)
+  password                                                   String                        @db.VarChar(255)
   role_id                                                    Int
   is_active                                                  Boolean?                      @default(true)
   created_at                                                 DateTime?                     @default(now()) @db.Timestamp(0)
