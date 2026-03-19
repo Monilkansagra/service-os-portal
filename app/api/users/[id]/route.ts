@@ -1,5 +1,6 @@
 import { db } from "@/lib/db";
 import { NextResponse } from "next/server";
+import bcrypt from "bcryptjs";
 
 // PATCH: Update user details (Staff)
 export async function PATCH(req: Request, { params }: { params: Promise<{ id: string }> }) {
@@ -7,6 +8,11 @@ export async function PATCH(req: Request, { params }: { params: Promise<{ id: st
     const { id } = await params;
     const userId = Number(id);
     const body = await req.json();
+
+    let hashedPassword: string | undefined;
+    if (body.password) {
+      hashedPassword = await bcrypt.hash(body.password, 10);
+    }
 
     return await db.$transaction(async (tx) => {
       // 1. Update user core details
@@ -17,7 +23,7 @@ export async function PATCH(req: Request, { params }: { params: Promise<{ id: st
           email: body.email,
           role_id: body.role_id ? Number(body.role_id) : undefined,
           is_active: body.is_active,
-          ...(body.password && { password: body.password })
+          ...(hashedPassword && { password: hashedPassword })
         }
       });
 

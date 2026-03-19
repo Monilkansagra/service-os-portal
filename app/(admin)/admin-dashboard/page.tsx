@@ -22,7 +22,8 @@ export default async function AdminDashboardPage() {
           include: {
             service_department: true
           }
-        }
+        },
+        service_request_status: true
       }
     })
   ]);
@@ -41,17 +42,31 @@ export default async function AdminDashboardPage() {
 
   const pieMap = new Map<string, number>();
   const responseTimeMap = new Map<string, { totalHours: number, count: number }>();
+  
+  // Heatmap Data (Last 12 weeks, 7 days a week)
+  const heatmapData = Array.from({ length: 12 }, () => Array(7).fill(0));
 
   allRequests.forEach(req => {
     // Line Chart (Past 7 Days)
     if (req.request_datetime) {
       const diffTime = today.getTime() - req.request_datetime.getTime();
-      const diffDays = diffTime / (1000 * 60 * 60 * 24);
-      if (diffDays >= 0 && diffDays <= 7) {
+      const diffDaysFloat = diffTime / (1000 * 60 * 60 * 24);
+      const diffDays = Math.floor(diffDaysFloat);
+      
+      if (diffDaysFloat >= 0 && diffDaysFloat <= 7) {
         const dayName = days[req.request_datetime.getDay()];
         if (lineChartMap.has(dayName)) {
           lineChartMap.get(dayName).value += 1;
         }
+      }
+
+      // Activity Heatmap (Last 90 days roughly -> 12 weeks = 84 days)
+      if (diffDays >= 0 && diffDays < 84) {
+        const week = Math.floor(diffDays / 7);
+        const day = diffDays % 7;
+        const colIndex = 11 - week;
+        const rowIndex = 6 - day;
+        heatmapData[colIndex][rowIndex] += 1;
       }
     }
 
@@ -81,7 +96,6 @@ export default async function AdminDashboardPage() {
   if (pieData.length === 0) pieData.push({ name: 'No Data', value: 1 });
   if (barData.length === 0) barData.push({ name: 'No Data', time: 0 });
 
-  // 2. Prepare data object
   const stats = {
     totalUsers: userCount,
     departments: deptCount,
@@ -89,5 +103,15 @@ export default async function AdminDashboardPage() {
     totalRequests: requestCount
   };
 
-  return <AdminDashboardClient stats={stats} initialLineData={lineChartData} initialPieData={pieData} initialBarData={barData} />;
+  const formattedRequests = allRequests.map(req => ({
+    request_no: req.request_no,
+    request_title: req.request_title,
+    request_datetime: req.request_datetime ? req.request_datetime.toISOString() : null,
+    assigned_datetime: req.assigned_datetime ? req.assigned_datetime.toISOString() : null,
+    dept_name: req.service_request_type?.service_department?.dept_name || 'Unknown',
+    status: req.service_request_status?.status_name || 'Unknown',
+    priority: req.priority_level || 'Normal'
+  }));
+
+  return <AdminDashboardClient stats={stats} initialPieData={pieData} initialBarData={barData} initialHeatmapData={heatmapData} requests={formattedRequests} />;
 }

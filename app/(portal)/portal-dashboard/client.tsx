@@ -28,9 +28,10 @@ import { Input } from '@/components/ui/input';
 interface Props {
   initialRequests: any[];
   userId: number;
+  requestTypes: any[];
 }
 
-export default function RequestorDashboardClient({ initialRequests, userId }: Props) {
+export default function RequestorDashboardClient({ initialRequests, userId, requestTypes }: Props) {
   const router = useRouter();
   const [requests, setRequests] = useState(initialRequests);
   const [isNewRequestModal, setIsNewRequestModal] = useState(false);
@@ -68,7 +69,7 @@ export default function RequestorDashboardClient({ initialRequests, userId }: Pr
   // Form States
   const [replyMsg, setReplyMsg] = useState('');
   const [formData, setFormData] = useState({
-    category: 'Hardware',
+    category: requestTypes && requestTypes.length > 0 ? requestTypes[0].request_type_id.toString() : '',
     priority: 'Medium',
     title: '',
     description: ''
@@ -85,7 +86,7 @@ export default function RequestorDashboardClient({ initialRequests, userId }: Pr
         body: JSON.stringify({
           request_title: formData.title,
           request_description: formData.description,
-          request_type_id: 1, // Default or map from category
+          request_type_id: Number(formData.category),
           priority_level: formData.priority,
           status_id: 1, // Default 'New'
           created_by_user_id: userId,
@@ -97,7 +98,7 @@ export default function RequestorDashboardClient({ initialRequests, userId }: Pr
 
       if (response.ok) {
         setIsNewRequestModal(false);
-        setFormData({ category: 'Hardware', priority: 'Medium', title: '', description: '' });
+        setFormData({ category: requestTypes && requestTypes.length > 0 ? requestTypes[0].request_type_id.toString() : '', priority: 'Medium', title: '', description: '' });
         router.refresh();
       } else {
         alert("Error: " + (result.error || result.details));
@@ -139,10 +140,10 @@ export default function RequestorDashboardClient({ initialRequests, userId }: Pr
   };
 
   const getStatusColor = (status: string) => {
-    if (status.includes('Pending') || status.includes('New')) return 'bg-amber-100 text-amber-600 dark:bg-amber-900/30 dark:text-amber-400';
-    if (status.includes('Progress')) return 'bg-indigo-100 text-indigo-600 dark:bg-indigo-900/30 dark:text-indigo-400';
-    if (status.includes('Resolved') || status.includes('Closed')) return 'bg-emerald-100 text-emerald-600 dark:bg-emerald-900/30 dark:text-emerald-400';
-    return 'bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-300';
+    if (status.includes('Pending') || status.includes('New')) return 'bg-amber-100/50 text-amber-700 dark:bg-amber-500/10 dark:text-amber-400 border border-amber-200/50 dark:border-amber-500/20';
+    if (status.includes('Progress')) return 'bg-indigo-100/50 text-indigo-700 dark:bg-indigo-500/10 dark:text-indigo-400 border border-indigo-200/50 dark:border-indigo-500/20';
+    if (status.includes('Resolved') || status.includes('Closed')) return 'bg-emerald-100/50 text-emerald-700 dark:bg-emerald-500/10 dark:text-emerald-400 border border-emerald-200/50 dark:border-emerald-500/20';
+    return 'bg-slate-100/50 text-slate-700 dark:bg-slate-500/10 dark:text-slate-400 border border-slate-200/50 dark:border-slate-500/20';
   };
 
   if (!isMounted) return null;
@@ -152,21 +153,29 @@ export default function RequestorDashboardClient({ initialRequests, userId }: Pr
 
       {/* Header Slide-in */}
       <motion.div
-        initial={{ opacity: 0, y: -20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.5, ease: "easeOut" }}
-        className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 p-6 rounded-2xl shadow-sm"
+        initial={{ opacity: 0, scale: 0.95 }}
+        animate={{ opacity: 1, scale: 1 }}
+        transition={{ duration: 0.6, ease: [0.16, 1, 0.3, 1] }}
+        className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 bg-white/60 dark:bg-slate-900/60 backdrop-blur-xl border border-slate-200/50 dark:border-slate-800/50 p-6 md:p-8 rounded-3xl shadow-[0_8px_30px_rgb(0,0,0,0.04)] dark:shadow-[0_8px_30px_rgb(0,0,0,0.2)]"
       >
-        <div>
-          <h1 className="text-3xl font-black tracking-tight text-slate-900 dark:text-white flex items-center gap-3">
-            My Portal <span className="inline-flex items-center justify-center px-2 py-1 bg-indigo-100 dark:bg-indigo-900/50 text-indigo-700 dark:text-indigo-300 text-[10px] rounded-full font-black uppercase tracking-wider">User</span>
+        <div className="space-y-1.5">
+          <h1 className="text-3xl md:text-4xl font-black tracking-tight text-transparent bg-clip-text bg-gradient-to-r from-slate-900 to-slate-700 dark:from-white dark:to-slate-300 flex items-center gap-3">
+            Operations Hub 
+            <motion.span 
+              initial={{ opacity: 0, x: -10 }}
+              animate={{ opacity: 1, x: 0 }}
+              transition={{ delay: 0.3 }}
+              className="inline-flex items-center justify-center px-2.5 py-1 bg-gradient-to-r from-indigo-500/10 to-purple-500/10 text-indigo-600 dark:text-indigo-400 border border-indigo-500/20 text-[11px] rounded-full font-bold uppercase tracking-widest shadow-sm"
+            >
+              User Portal
+            </motion.span>
           </h1>
-          <p className="text-sm text-slate-500 dark:text-slate-400 mt-1">Manage your service requests and track updates</p>
+          <p className="text-sm md:text-base text-slate-500 dark:text-slate-400 font-medium">Manage your service requests and track updates in real-time</p>
         </div>
 
         <motion.button
-          whileHover={{ scale: 1.02 }}
-          whileTap={{ scale: 0.98 }}
+          whileHover={{ scale: 1.05, boxShadow: "0 20px 25px -5px rgb(99 102 241 / 0.2)" }}
+          whileTap={{ scale: 0.95 }}
           onClick={() => setIsNewRequestModal(true)}
           className="px-5 py-2.5 bg-indigo-600 text-white rounded-xl shadow-sm shadow-indigo-200 dark:shadow-none font-semibold text-sm flex items-center gap-2 hover:bg-indigo-700 transition-colors"
         >
@@ -188,27 +197,38 @@ export default function RequestorDashboardClient({ initialRequests, userId }: Pr
             {widgetIds.map((id) => {
               if (id === "stats-row") {
                 return (
-                  <DashboardCard key={id} id={id} title="My Stats" className="lg:col-span-3 min-h-[140px]">
-                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4 h-full">
-                      <motion.div initial={{ scale: 0.9, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} transition={{ delay: 0.1 }} className="flex items-center p-4 rounded-xl border border-slate-100 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-800/30">
-                        <div className="w-12 h-12 rounded-full bg-indigo-100 text-indigo-600 dark:bg-indigo-900/30 dark:text-indigo-400 flex items-center justify-center mr-4"><Clock size={20} /></div>
-                        <div>
-                          <h3 className="text-2xl font-bold text-slate-900 dark:text-white leading-tight">{requests.length}</h3>
-                          <p className="text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase">Total Requests</p>
+                  <DashboardCard key={id} id={id} title="My Stats" className="lg:col-span-3 min-h-[140px] bg-white/40 dark:bg-slate-900/40 backdrop-blur-xl border-slate-200/50">
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-6 h-full">
+                      <motion.div whileHover={{ y: -5 }} className="group relative overflow-hidden flex flex-col justify-center p-6 rounded-2xl bg-gradient-to-br from-white to-slate-50 dark:from-slate-800 dark:to-slate-800/50 border border-slate-100 dark:border-slate-700/50 shadow-sm transition-all hover:shadow-xl hover:shadow-indigo-500/10">
+                        <div className="absolute top-0 right-0 w-32 h-32 bg-indigo-500/5 dark:bg-indigo-400/5 rounded-full blur-2xl -mr-10 -mt-10 transition-transform group-hover:scale-150 duration-500" />
+                        <div className="flex items-center justify-between z-10">
+                          <div>
+                            <p className="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-1">Total Requests</p>
+                            <h3 className="text-4xl font-black text-slate-900 dark:text-white tracking-tighter">{requests.length}</h3>
+                          </div>
+                          <div className="w-14 h-14 rounded-2xl bg-indigo-100 text-indigo-600 dark:bg-indigo-500/20 dark:text-indigo-400 flex items-center justify-center transform group-hover:rotate-12 transition-transform duration-300"><Clock size={28} strokeWidth={2.5} /></div>
                         </div>
                       </motion.div>
-                      <motion.div initial={{ scale: 0.9, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} transition={{ delay: 0.2 }} className="flex items-center p-4 rounded-xl border border-slate-100 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-800/30">
-                        <div className="w-12 h-12 rounded-full bg-amber-100 text-amber-600 dark:bg-amber-900/30 dark:text-amber-400 flex items-center justify-center mr-4"><AlertCircle size={20} /></div>
-                        <div>
-                          <h3 className="text-2xl font-bold text-slate-900 dark:text-white leading-tight">{requests.filter((r: any) => r.status.includes('Pending') || r.status.includes('New')).length}</h3>
-                          <p className="text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase">Waiting on Action</p>
+                      
+                      <motion.div whileHover={{ y: -5 }} className="group relative overflow-hidden flex flex-col justify-center p-6 rounded-2xl bg-gradient-to-br from-white to-slate-50 dark:from-slate-800 dark:to-slate-800/50 border border-slate-100 dark:border-slate-700/50 shadow-sm transition-all hover:shadow-xl hover:shadow-amber-500/10">
+                        <div className="absolute top-0 right-0 w-32 h-32 bg-amber-500/5 dark:bg-amber-400/5 rounded-full blur-2xl -mr-10 -mt-10 transition-transform group-hover:scale-150 duration-500" />
+                        <div className="flex items-center justify-between z-10">
+                          <div>
+                            <p className="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-1">Waiting Action</p>
+                            <h3 className="text-4xl font-black text-slate-900 dark:text-white tracking-tighter">{requests.filter((r: any) => r.status.includes('Pending') || r.status.includes('New')).length}</h3>
+                          </div>
+                          <div className="w-14 h-14 rounded-2xl bg-amber-100 text-amber-600 dark:bg-amber-500/20 dark:text-amber-400 flex items-center justify-center transform group-hover:-rotate-12 transition-transform duration-300"><AlertCircle size={28} strokeWidth={2.5} /></div>
                         </div>
                       </motion.div>
-                      <motion.div initial={{ scale: 0.9, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} transition={{ delay: 0.3 }} className="flex items-center p-4 rounded-xl border border-slate-100 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-800/30">
-                        <div className="w-12 h-12 rounded-full bg-emerald-100 text-emerald-600 dark:bg-emerald-900/30 dark:text-emerald-400 flex items-center justify-center mr-4"><CheckCircle2 size={20} /></div>
-                        <div>
-                          <h3 className="text-2xl font-bold text-slate-900 dark:text-white leading-tight">{requests.filter((r: any) => r.status.includes('Resolved') || r.status.includes('Closed')).length}</h3>
-                          <p className="text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase">Resolved</p>
+
+                      <motion.div whileHover={{ y: -5 }} className="group relative overflow-hidden flex flex-col justify-center p-6 rounded-2xl bg-gradient-to-br from-white to-slate-50 dark:from-slate-800 dark:to-slate-800/50 border border-slate-100 dark:border-slate-700/50 shadow-sm transition-all hover:shadow-xl hover:shadow-emerald-500/10">
+                        <div className="absolute top-0 right-0 w-32 h-32 bg-emerald-500/5 dark:bg-emerald-400/5 rounded-full blur-2xl -mr-10 -mt-10 transition-transform group-hover:scale-150 duration-500" />
+                        <div className="flex items-center justify-between z-10">
+                          <div>
+                            <p className="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-1">Resolved</p>
+                            <h3 className="text-4xl font-black text-slate-900 dark:text-white tracking-tighter">{requests.filter((r: any) => r.status.includes('Resolved') || r.status.includes('Closed')).length}</h3>
+                          </div>
+                          <div className="w-14 h-14 rounded-2xl bg-emerald-100 text-emerald-600 dark:bg-emerald-500/20 dark:text-emerald-400 flex items-center justify-center transform group-hover:scale-110 transition-transform duration-300"><CheckCircle2 size={28} strokeWidth={2.5} /></div>
                         </div>
                       </motion.div>
                     </div>
@@ -218,45 +238,57 @@ export default function RequestorDashboardClient({ initialRequests, userId }: Pr
 
               if (id === "active-requests") {
                 return (
-                  <DashboardCard key={id} id={id} title="Recent Requests" className="lg:col-span-3 min-h-[400px]">
-                    <div className="flex justify-between items-center mb-4">
-                      <div className="relative">
-                        <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={16} />
-                        <Input className="pl-9 w-64 bg-slate-50 dark:bg-slate-900 border-none" placeholder="Search ID or Title..." />
+                  <DashboardCard key={id} id={id} title="Recent Requests" className="lg:col-span-3 min-h-[400px] bg-white/40 dark:bg-slate-900/40 backdrop-blur-xl border-slate-200/50">
+                    <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6 gap-4">
+                      <div className="relative group w-full sm:w-auto">
+                        <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-indigo-500 transition-colors" size={18} />
+                        <Input className="pl-11 w-full sm:w-80 bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700/50 rounded-xl focus:ring-2 focus:ring-indigo-500/20 transition-all font-medium py-5 shadow-sm" placeholder="Search Request ID or Title..." />
                       </div>
-                      <button className="p-2 bg-slate-50 dark:bg-slate-800 rounded-lg text-slate-400 hover:text-indigo-500 transition-colors"><Filter size={18} /></button>
+                      <div className="flex gap-2 w-full sm:w-auto">
+                        <button className="flex-1 sm:flex-none flex items-center justify-center gap-2 px-4 py-2.5 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700/50 rounded-xl text-slate-600 dark:text-slate-300 font-semibold text-sm hover:bg-slate-50 dark:hover:bg-slate-700 hover:text-indigo-600 transition-all shadow-sm">
+                          <Filter size={16} /> Filter
+                        </button>
+                      </div>
                     </div>
 
-                    <div className="space-y-2">
+                    <div className="space-y-3">
                       {requests.length === 0 ? (
-                        <div className="p-10 text-center text-slate-400 font-medium">You have no requests yet.</div>
+                        <div className="p-16 text-center text-slate-400 font-medium flex flex-col items-center justify-center">
+                          <div className="w-16 h-16 mb-4 rounded-full bg-slate-100 dark:bg-slate-800 flex items-center justify-center text-slate-300 dark:text-slate-600"><Search size={32} /></div>
+                          <p>You have no requests yet.</p>
+                          <button onClick={() => setIsNewRequestModal(true)} className="mt-4 text-indigo-500 hover:text-indigo-600 font-semibold underline text-sm">Create your first request</button>
+                        </div>
                       ) : (
                         <AnimatePresence>
                           {requests.map((req: any, i: number) => (
                             <motion.div
-                              initial={{ opacity: 0, x: -20 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: i * 0.05 }}
+                              initial={{ opacity: 0, x: -20, scale: 0.98 }} animate={{ opacity: 1, x: 0, scale: 1 }} exit={{ opacity: 0, scale: 0.95 }} transition={{ delay: i * 0.05, duration: 0.2 }}
                               key={req.id}
                               onClick={() => setSelectedRequest(req)}
-                              className="p-4 rounded-xl border border-slate-100 dark:border-slate-800 hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors cursor-pointer group flex items-center justify-between"
+                              className="p-5 rounded-2xl bg-white dark:bg-slate-800/80 border border-slate-200/60 dark:border-slate-700/50 hover:border-indigo-500/30 hover:shadow-[0_8px_30px_rgb(99,102,241,0.08)] transition-all cursor-pointer group flex flex-col sm:flex-row sm:items-center justify-between gap-4"
                             >
-                              <div className="flex items-center gap-4">
-                                <div className={`w-12 h-12 rounded-xl flex items-center justify-center font-bold text-lg ${getStatusColor(req.status)}`}>
+                              <div className="flex items-start sm:items-center gap-4">
+                                <div className={`w-14 h-14 shrink-0 rounded-2xl flex items-center justify-center font-black text-xl shadow-inner ${getStatusColor(req.status)}`}>
                                   {req.type?.charAt(0) || 'R'}
                                 </div>
                                 <div>
-                                  <div className="flex items-center gap-2 mb-1">
-                                    <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">{req.id}</span>
-                                    <span className={`text-[10px] px-2 py-0.5 rounded-md font-semibold ${req.priority === 'High' ? 'bg-red-50 text-red-500 dark:bg-red-900/30 dark:text-red-400' : 'bg-slate-100 text-slate-500 dark:bg-slate-800 dark:text-slate-300'}`}>{req.priority}</span>
+                                  <div className="flex flex-wrap items-center gap-2 mb-1.5">
+                                    <span className="text-[10px] font-black text-slate-500 uppercase tracking-widest">{req.id}</span>
+                                    <span className={`text-[10px] px-2 py-0.5 rounded-md font-bold uppercase tracking-wider ${req.priority === 'High' ? 'bg-red-100/50 text-red-600 dark:bg-red-500/10 dark:text-red-400 border border-red-200/50 dark:border-red-500/20' : req.priority === 'Medium' ? 'bg-blue-100/50 text-blue-600 dark:bg-blue-500/10 dark:text-blue-400 border border-blue-200/50 dark:border-blue-500/20' : 'bg-slate-100/50 text-slate-600 dark:bg-slate-500/10 dark:text-slate-400 border border-slate-200/50 dark:border-slate-500/20'}`}>{req.priority}</span>
+                                    <span className={`text-[10px] px-2 py-0.5 rounded-md font-bold tracking-wider ${getStatusColor(req.status)}`}>{req.status}</span>
                                   </div>
-                                  <h4 className="font-semibold tracking-tight text-slate-800 dark:text-slate-100 group-hover:text-indigo-600 dark:group-hover:text-indigo-400 transition-colors">{req.title}</h4>
+                                  <h4 className="font-bold text-lg tracking-tight text-slate-900 dark:text-slate-100 group-hover:text-indigo-600 dark:group-hover:text-indigo-400 transition-colors line-clamp-1">{req.title}</h4>
                                 </div>
                               </div>
-                              <div className="flex items-center gap-6">
-                                <div className="hidden sm:flex items-center gap-4 text-xs text-slate-400 font-medium">
-                                  <span className="flex items-center gap-1"><Clock size={14} /> {req.date}</span>
-                                  <span className="flex items-center gap-1"><MessageSquare size={14} /> {req.replies?.length || 0}</span>
+                              <div className="flex items-center justify-between sm:justify-end gap-4 w-full sm:w-auto mt-2 sm:mt-0">
+                                <div className="flex items-center gap-4 text-xs text-slate-500 font-semibold bg-slate-50 dark:bg-slate-900/50 px-3 py-1.5 rounded-lg border border-slate-100 dark:border-slate-800">
+                                  <span className="flex items-center gap-1.5"><Clock size={14} className="text-slate-400" /> {req.date}</span>
+                                  <div className="w-px h-3 bg-slate-300 dark:bg-slate-700"></div>
+                                  <span className="flex items-center gap-1.5"><MessageSquare size={14} className="text-slate-400" /> {req.replies?.length || 0}</span>
                                 </div>
-                                <ChevronRight className="text-slate-300 group-hover:text-indigo-500 group-hover:translate-x-1 transition-all" size={20} />
+                                <div className="w-10 h-10 rounded-full flex items-center justify-center bg-slate-50 dark:bg-slate-800 group-hover:bg-indigo-50 dark:group-hover:bg-indigo-500/10 transition-colors shrink-0">
+                                  <ChevronRight className="text-slate-400 group-hover:text-indigo-600 dark:group-hover:text-indigo-400 group-hover:translate-x-0.5 transition-all" size={20} />
+                                </div>
                               </div>
                             </motion.div>
                           ))}
@@ -277,15 +309,18 @@ export default function RequestorDashboardClient({ initialRequests, userId }: Pr
         {isNewRequestModal && (
           <motion.div
             initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
-            className="fixed inset-0 bg-slate-900/40 backdrop-blur-sm z-50 flex justify-end"
+            className="fixed inset-0 z-50 flex justify-end"
           >
+            {/* Backdrop with dedicated click layer to close */}
+            <div className="absolute inset-0 bg-slate-900/40 backdrop-blur-sm" onClick={() => setIsNewRequestModal(false)}></div>
+            
             <motion.div
               initial={{ x: "100%" }} animate={{ x: 0 }} exit={{ x: "100%" }} transition={{ type: "spring", damping: 25, stiffness: 200 }}
-              className="w-full max-w-md bg-white dark:bg-slate-900 h-full shadow-2xl flex flex-col border-l border-slate-200 dark:border-slate-800"
+              className="w-full max-w-md bg-white dark:bg-slate-900 h-full shadow-2xl flex flex-col border-l border-slate-200 dark:border-slate-800 relative z-10"
             >
-              <div className="p-6 border-b border-slate-100 dark:border-slate-800 flex justify-between items-center">
-                <h2 className="text-xl font-bold tracking-tight text-slate-900 dark:text-white">New Request</h2>
-                <button onClick={() => setIsNewRequestModal(false)} className="p-2 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-full text-slate-400 hover:text-red-500 transition-colors"><X size={20} /></button>
+              <div className="p-6 border-b border-slate-100 dark:border-slate-800 flex justify-between items-center bg-slate-50/50 dark:bg-slate-800/50">
+                <h2 className="text-xl font-black tracking-tight text-slate-900 dark:text-white flex items-center gap-2"><Plus size={22} className="text-indigo-600" /> New Request</h2>
+                <button onClick={() => setIsNewRequestModal(false)} className="p-2.5 bg-white dark:bg-slate-800 shadow-sm border border-slate-200 dark:border-slate-700 hover:bg-red-50 dark:hover:bg-red-500/10 rounded-full text-slate-500 hover:text-red-500 transition-all focus:outline-none focus:ring-2 focus:ring-red-500/40"><X size={18} strokeWidth={2.5} /></button>
               </div>
 
               <div className="p-6 flex-1 overflow-y-auto space-y-6">
@@ -295,9 +330,11 @@ export default function RequestorDashboardClient({ initialRequests, userId }: Pr
                     value={formData.category} onChange={(e) => setFormData({ ...formData, category: e.target.value })}
                     className="w-full p-4 bg-transparent border border-slate-200 dark:border-slate-700 rounded-xl outline-none focus:border-indigo-500 dark:focus:border-indigo-500 transition-colors peer appearance-none relative z-10 font-medium"
                   >
-                    <option value="Hardware">Hardware Issue</option>
-                    <option value="Software">Software Request</option>
-                    <option value="Network">Network/WiFi</option>
+                    {requestTypes && requestTypes.map((rt: any) => (
+                      <option key={rt.request_type_id} value={rt.request_type_id}>
+                        {rt.request_type_name}
+                      </option>
+                    ))}
                   </select>
                   <label className="absolute left-3 -top-2.5 bg-white dark:bg-slate-900 px-2 text-xs font-semibold text-indigo-500 z-20">Category</label>
                 </div>
@@ -357,18 +394,19 @@ export default function RequestorDashboardClient({ initialRequests, userId }: Pr
         {selectedRequest && (
           <motion.div
             initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
-            className="fixed inset-0 bg-slate-900/40 backdrop-blur-sm z-50 flex justify-end"
+            className="fixed inset-0 z-50 flex justify-end"
           >
+            <div className="absolute inset-0 bg-slate-900/40 backdrop-blur-sm" onClick={() => setSelectedRequest(null)}></div>
             <motion.div
               initial={{ x: "100%" }} animate={{ x: 0 }} exit={{ x: "100%" }} transition={{ type: "spring", damping: 25, stiffness: 200 }}
-              className="w-full max-w-md bg-white dark:bg-slate-900 h-full shadow-2xl flex flex-col border-l border-slate-200 dark:border-slate-800"
+              className="w-full max-w-md bg-white dark:bg-slate-900 h-full shadow-2xl flex flex-col border-l border-slate-200 dark:border-slate-800 relative z-10"
             >
-              <div className="p-6 border-b border-slate-100 dark:border-slate-800 flex justify-between items-center bg-slate-50/50 dark:bg-slate-900">
+              <div className="p-6 border-b border-slate-100 dark:border-slate-800 flex justify-between items-start bg-slate-50/50 dark:bg-slate-800/50">
                 <div>
-                  <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">{selectedRequest.id}</span>
-                  <h3 className="text-xl font-bold text-slate-900 dark:text-white leading-tight mt-1">{selectedRequest.title}</h3>
+                  <span className="text-[10px] font-black text-slate-500 uppercase tracking-widest">{selectedRequest.id}</span>
+                  <h3 className="text-xl font-black text-slate-900 dark:text-white leading-tight mt-1">{selectedRequest.title}</h3>
                 </div>
-                <button onClick={() => setSelectedRequest(null)} className="p-2 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-full text-slate-400 hover:text-red-500 transition-colors"><X size={20} /></button>
+                <button onClick={() => setSelectedRequest(null)} className="p-2.5 bg-white dark:bg-slate-800 shadow-sm border border-slate-200 dark:border-slate-700 hover:bg-red-50 dark:hover:bg-red-500/10 rounded-full text-slate-500 hover:text-red-500 transition-all shrink-0 focus:outline-none focus:ring-2 focus:ring-red-500/40"><X size={18} strokeWidth={2.5} /></button>
               </div>
 
               <div className="flex-1 overflow-y-auto p-6 space-y-6">

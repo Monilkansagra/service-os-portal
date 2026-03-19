@@ -1,5 +1,6 @@
 import { db } from "@/lib/db";
 import { NextResponse } from "next/server";
+import bcrypt from "bcryptjs";
 
 // GET: List all users with their roles
 export async function GET() {
@@ -19,13 +20,15 @@ export async function POST(req: Request) {
   try {
     const body = await req.json();
 
+    const hashedPassword = await bcrypt.hash(body.password || "changeme123", 10);
+
     return await db.$transaction(async (tx) => {
       // 1. Create the user
       const user = await tx.users.create({
         data: {
           full_name: body.full_name || body.name,
           email: body.email,
-          password: body.password || "changeme123",
+          password: hashedPassword,
           role_id: Number(body.role_id),
           is_active: body.is_active ?? true,
           created_at: new Date()

@@ -6,7 +6,7 @@ import { usePathname } from "next/navigation";
 import {
   LayoutGrid, Building2, Users, ListFilter, Settings,
   Fingerprint, Map as MapIcon, User, BarChart3, ShieldCheck,
-  Download, ChevronLeft, Menu, LogOut, Search, Bell
+  Download, ChevronLeft, Menu, LogOut, Search, Bell, FileSpreadsheet
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 
@@ -22,12 +22,14 @@ const NAV_GROUPS = [
       { name: "Status Master", href: "/status-master", icon: Fingerprint },
       { name: "Type Mapping", href: "/type-mapping", icon: MapIcon },
       { name: "Person Master", href: "/department-person-master", icon: User },
+      { name: "Reports", href: "/reports", icon: FileSpreadsheet },
     ]
   }
 ];
 
 export default function AdminLayout({ children }: { children: React.ReactNode }) {
   const [isSidebarOpen, setSidebarOpen] = useState(true);
+  const [isNotificationsOpen, setNotificationsOpen] = useState(false);
   const pathname = usePathname();
 
   const handleLogout = async () => {
@@ -56,7 +58,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
       <motion.aside
         initial={false}
         animate={{ width: isSidebarOpen ? 260 : 72, x: 0 }}
-        className={`h-full flex flex-col items-center py-6 relative md:relative z-50 shadow-2xl flex-shrink-0 custom-scrollbar overflow-y-auto overflow-x-hidden border-r border-indigo-900/40 ${isSidebarOpen ? 'absolute' : 'hidden md:flex'}`}
+        className={`h-full flex flex-col items-center py-6 z-50 shadow-2xl flex-shrink-0 overflow-x-hidden border-r border-indigo-900/40 ${isSidebarOpen ? 'absolute md:relative' : 'hidden md:flex'}`}
         style={{ background: "linear-gradient(180deg, #1E1B4B 0%, #312E81 50%, #1E1B4B 100%)" }}
       >
         {/* Toggle Button */}
@@ -87,7 +89,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
         </div>
 
         {/* Navigation Groups */}
-        <nav className="w-full flex-1 flex flex-col gap-6 px-3">
+        <nav className="w-full flex-1 flex flex-col gap-6 px-3 overflow-y-auto custom-scrollbar">
           {NAV_GROUPS.map((group, gIdx) => (
             <div key={gIdx} className="w-full">
               {/* Group Label */}
@@ -158,14 +160,14 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
       {/* Main Content */}
       <div className="flex-1 flex flex-col h-full overflow-hidden relative bg-[#0F0F1A]">
         {/* Top Header Banner */}
-        <header className="h-16 bg-[#13131F] border-b border-indigo-900/40 flex items-center justify-between px-4 sm:px-8 z-10 sticky top-0 shadow-sm relative">
+        <header className="h-16 bg-[#13131F] border-b border-indigo-900/40 flex items-center justify-between px-4 sm:px-8 z-50 sticky top-0 shadow-sm relative">
           <div className="absolute left-0 top-0 bottom-0 w-1 bg-gradient-to-b from-indigo-500 to-violet-500" />
 
           {/* Mobile Menu Toggle */}
           <div className="flex md:hidden mr-4">
-             <button onClick={() => setSidebarOpen(true)} className="p-2 text-slate-400 hover:text-white transition-colors">
-               <Menu size={24} />
-             </button>
+            <button onClick={() => setSidebarOpen(true)} className="p-2 text-slate-400 hover:text-white transition-colors">
+              <Menu size={24} />
+            </button>
           </div>
 
           <div className="flex-1 max-w-lg">
@@ -175,11 +177,57 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
             </div>
           </div>
 
-          <div className="flex items-center gap-4">
-            <button className="p-2.5 rounded-full bg-[#1A1A2E] hover:bg-[#232338] border border-indigo-900/30 text-slate-400 hover:text-white transition-colors relative group">
+          <div className="flex items-center gap-4 relative">
+            <button
+              onClick={() => setNotificationsOpen(!isNotificationsOpen)}
+              className={`p-2.5 rounded-full ${isNotificationsOpen ? 'bg-[#232338] text-white border-indigo-500/50' : 'bg-[#1A1A2E] text-slate-400 border-indigo-900/30'} hover:bg-[#232338] border hover:text-white transition-colors relative group`}
+            >
               <Bell className="w-4 h-4 group-hover:scale-110 transition-transform" />
               <span className="absolute top-2 right-2.5 w-2 h-2 rounded-full bg-red-500 border border-[#1A1A2E]"></span>
             </button>
+
+            {/* Notifications Dropdown */}
+            <AnimatePresence>
+              {isNotificationsOpen && (
+                <motion.div
+                  initial={{ opacity: 0, y: 10, scale: 0.95 }}
+                  animate={{ opacity: 1, y: 0, scale: 1 }}
+                  exit={{ opacity: 0, y: 10, scale: 0.95 }}
+                  transition={{ duration: 0.2 }}
+                  className="absolute top-14 right-0 w-80 bg-[#1A1A2E] border border-indigo-900/40 rounded-2xl shadow-2xl overflow-hidden z-50 text-white"
+                >
+                  <div className="p-4 border-b border-indigo-900/30 flex justify-between items-center bg-[#13131F]">
+                    <h3 className="font-bold text-sm tracking-wide">Notifications</h3>
+                    <span className="text-xs bg-indigo-500/20 text-indigo-300 px-2 py-0.5 rounded-full font-semibold">2 New</span>
+                  </div>
+                  <div className="max-h-80 overflow-y-auto custom-scrollbar">
+                    <div className="p-4 border-b border-indigo-900/20 hover:bg-[#232338] transition-colors cursor-pointer">
+                      <p className="text-sm font-medium text-white mb-1">New Service Request</p>
+                      <p className="text-xs text-slate-400">IT Support required in HR block</p>
+                      <p className="text-[10px] text-indigo-400 font-semibold mt-2">Just now</p>
+                    </div>
+                    <div className="p-4 border-b border-indigo-900/20 hover:bg-[#232338] transition-colors cursor-pointer opacity-70">
+                      <p className="text-sm font-medium text-slate-300 mb-1">System Update</p>
+                      <p className="text-xs text-slate-400">AdminOS v2.0 update completed</p>
+                      <p className="text-[10px] text-slate-500 font-semibold mt-2">2 hours ago</p>
+                    </div>
+                    <div className="p-4 hover:bg-[#232338] transition-colors cursor-pointer opacity-70">
+                      <p className="text-sm font-medium text-slate-300 mb-1">Server Alert</p>
+                      <p className="text-xs text-slate-400">High CPU usage on Node 3</p>
+                      <p className="text-[10px] text-slate-500 font-semibold mt-2">Yesterday</p>
+                    </div>
+                  </div>
+                  <div className="p-3 border-t border-indigo-900/30 bg-[#13131F] text-center">
+                    <button
+                      onClick={() => alert("All notifications marked as read")}
+                      className="text-xs text-indigo-400 hover:text-indigo-300 font-bold tracking-wider uppercase transition-colors"
+                    >
+                      Mark All as Read
+                    </button>
+                  </div>
+                </motion.div>
+              )}
+            </AnimatePresence>
           </div>
         </header>
 

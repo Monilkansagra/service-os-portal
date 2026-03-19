@@ -127,7 +127,10 @@ export default function DataDirectoryPage() {
                     <p className="text-slate-400 font-medium text-sm">Manage and track all organizational service tickets.</p>
                 </div>
                 <div className="flex gap-3">
-                    <button className="flex items-center gap-2 bg-[#1A1A2E] border border-indigo-900/30 hover:border-indigo-500/50 text-slate-300 px-4 py-2 rounded-xl text-sm font-bold transition-all">
+                    <button 
+                        onClick={() => window.print()}
+                        className="flex items-center gap-2 bg-[#1A1A2E] border border-indigo-900/30 hover:border-indigo-500/50 text-slate-300 px-4 py-2 rounded-xl text-sm font-bold transition-all"
+                    >
                         <Download className="w-4 h-4" /> Export
                     </button>
                     <button

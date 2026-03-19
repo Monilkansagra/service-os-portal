@@ -2,6 +2,7 @@
 
 import { db } from "@/lib/db";
 import { revalidatePath } from "next/cache";
+import bcrypt from "bcryptjs";
 
 /**
  * Creates or updates a staff member and their department mapping.
@@ -59,12 +60,14 @@ export async function upsertStaff(formData: FormData) {
             });
           }
         }
-      } else {
+        // Hash the default password
+        const hashedPassword = await bcrypt.hash("changeme123", 10);
+
         // Create User
         user = await tx.users.create({
           data: {
             ...userData,
-            password: "changeme123", // Default password for new users
+            password: hashedPassword, // Default password for new users
             created_at: new Date(),
           }
         });

@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { loginUser } from './actions';
-import { ShieldCheck, Mail, Lock, Loader2, AlertCircle, CheckCircle2 } from 'lucide-react';
+import { ShieldCheck, Mail, Lock, Loader2, AlertCircle, CheckCircle2, Github } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 
 export default function LoginPage() {
@@ -13,10 +13,23 @@ export default function LoginPage() {
   const [validationErrors, setValidationErrors] = useState({ email: "", password: "" });
   const [isMounted, setIsMounted] = useState(false);
   const [success, setSuccess] = useState(false);
+  const [mousePosition, setMousePosition] = useState({ x: 0, y: 0 });
 
   useEffect(() => {
     setIsMounted(true);
   }, []);
+
+  const handleMouseMove = (e: React.MouseEvent) => {
+    const { clientX, clientY } = e;
+    const { innerWidth, innerHeight } = window;
+    const x = (clientX / innerWidth - 0.5) * 15; // 15 degrees max rotation on X
+    const y = (clientY / innerHeight - 0.5) * -15; // 15 degrees max rotation on Y
+    setMousePosition({ x, y });
+  };
+
+  const handleMouseLeave = () => {
+    setMousePosition({ x: 0, y: 0 });
+  };
 
   const validateEmail = (email: string) => {
     if (!email) return "Email address is required";
@@ -63,7 +76,12 @@ export default function LoginPage() {
   if (!isMounted) return null;
 
   return (
-    <div className="min-h-screen text-slate-900 dark:text-slate-100 flex items-center justify-center p-4 selection:bg-indigo-500/30 relative overflow-hidden bg-transparent">
+    <div 
+      className="min-h-screen text-slate-900 dark:text-slate-100 flex items-center justify-center p-4 selection:bg-indigo-500/30 relative overflow-hidden bg-transparent"
+      onMouseMove={handleMouseMove}
+      onMouseLeave={handleMouseLeave}
+      style={{ perspective: 1200 }}
+    >
       {/* Background Orbs */}
       <div className="absolute top-[-10%] left-[-10%] w-[40rem] h-[40rem] bg-indigo-500/20 rounded-full blur-3xl animate-[pulse-glow_8s_ease-in-out_infinite]" />
       <div className="absolute bottom-[-10%] right-[-10%] w-[40rem] h-[40rem] bg-violet-500/20 rounded-full blur-3xl animate-[pulse-glow_8s_ease-in-out_infinite_reverse]" />
@@ -76,10 +94,24 @@ export default function LoginPage() {
         <span className="font-bold tracking-tight text-lg">ServiceOS</span>
       </div>
 
-      {/* Main Login Card */}
+      {/* Main Login Card with 3D Interaction */}
       <motion.div
-        initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.6, ease: "easeOut" }}
-        className="w-full max-w-md relative z-10 backdrop-blur-xl bg-white/60 dark:bg-slate-900/60 border border-white/40 dark:border-slate-800/40 p-8 rounded-3xl shadow-2xl shadow-indigo-500/10 hover:-translate-y-1 hover:shadow-indigo-500/20 transition-all duration-300"
+        initial={{ opacity: 0, y: 30, scale: 0.95 }} 
+        animate={{ 
+          opacity: 1, 
+          y: 0, 
+          scale: 1,
+          rotateY: mousePosition.x,
+          rotateX: mousePosition.y
+        }} 
+        transition={{ 
+          duration: 0.6, 
+          ease: "easeOut",
+          rotateX: { type: "spring", stiffness: 150, damping: 20, mass: 0.5 },
+          rotateY: { type: "spring", stiffness: 150, damping: 20, mass: 0.5 }
+        }}
+        style={{ transformStyle: "preserve-3d" }}
+        className="w-full max-w-md relative z-10 backdrop-blur-xl bg-white/60 dark:bg-slate-900/60 border border-white/40 dark:border-slate-800/40 p-8 rounded-3xl shadow-[0_20px_50px_rgba(99,102,241,0.2)]"
       >
         <div className="text-center mb-10">
           <motion.h1
@@ -202,8 +234,17 @@ export default function LoginPage() {
           </motion.button>
         </form>
 
-        <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.8 }} className="mt-10 text-center">
-          <p className="text-xs font-bold text-slate-400 uppercase tracking-widest">Secure internal access</p>
+        <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.8 }} className="mt-10 flex flex-col items-center gap-4">
+          <a
+            href="https://github.com/Monilkansagra/service-os-portal.git"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="flex items-center gap-2 px-4 py-2 rounded-full bg-slate-50 dark:bg-slate-800/50 hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-500 hover:text-slate-900 dark:text-slate-400 dark:hover:text-white transition-all border border-slate-200 dark:border-slate-700/50 shadow-sm hover:shadow-md group"
+          >
+            <Github className="w-4 h-4 group-hover:scale-110 transition-transform" />
+            <span className="text-xs font-bold tracking-wider">@monilkansagra</span>
+          </a>
+          <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Secure internal access</p>
         </motion.div>
       </motion.div>
     </div>

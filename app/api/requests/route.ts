@@ -40,17 +40,33 @@ export async function POST(req: Request) {
     // Generate simple Ticket Number if missing
     const ticketNo = body.request_no || `REQ-${Math.floor(1000 + Math.random() * 9000)}`;
 
+    const reqTypeId = Number(body.request_type_id) || 1;
+    let assignedUserId = body.assigned_to_user_id ? Number(body.assigned_to_user_id) : undefined;
+    let statusId = Number(body.status_id) || 1; // Default to 'New'
+
+    // Auto-assignment logic
+    if (!assignedUserId) {
+      const mapping = await db.service_request_type_person.findFirst({
+        where: { request_type_id: reqTypeId }
+      });
+
+      if (mapping) {
+        assignedUserId = mapping.user_id;
+        // Optional: Update status to 'Assigned' (Assuming 2 = Assigned based on standard setups, or you can keep it as is if status_id isn't guaranteed)
+      }
+    }
+
     const res = await db.service_request.create({
       data: {
         request_no: ticketNo,
         request_datetime: body.request_datetime ? new Date(body.request_datetime) : new Date(),
-        request_type_id: Number(body.request_type_id) || 1,
+        request_type_id: reqTypeId,
         request_title: body.request_title,
         request_description: body.request_description,
-        status_id: Number(body.status_id) || 1, // Default to 'New' status
+        status_id: statusId,
         service_request_status_datetime: new Date(),
         priority_level: body.priority_level || 'Medium',
-        assigned_to_user_id: body.assigned_to_user_id ? Number(body.assigned_to_user_id) : undefined,
+        assigned_to_user_id: assignedUserId,
         created_by_user_id: Number(body.created_by_user_id) || Number(body.user_id),
         service_request_status_by_user_id: Number(body.user_id),
         user_id: Number(body.user_id),

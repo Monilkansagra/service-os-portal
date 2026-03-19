@@ -144,12 +144,18 @@ export default function AdminDashboardPage() {
                         Last updated: {lastUpdate}
                     </div>
 
-                    <div className="flex items-center gap-2 bg-[#13131F] border border-indigo-900/30 rounded-lg px-3 py-1.5 cursor-pointer hover:border-indigo-500/50 transition-colors">
+                    <div 
+                        onClick={() => alert("Opening Date Picker...")}
+                        className="flex items-center gap-2 bg-[#13131F] border border-indigo-900/30 rounded-lg px-3 py-1.5 cursor-pointer hover:border-indigo-500/50 transition-colors"
+                    >
                         <Calendar className="w-4 h-4 text-indigo-400" />
                         <span className="text-sm font-medium text-slate-300">Mar 1 - Mar 8</span>
                     </div>
 
-                    <button className="flex items-center gap-2 bg-gradient-to-r from-indigo-600 to-violet-600 hover:from-indigo-500 hover:to-violet-500 text-white px-4 py-1.5 rounded-lg font-bold text-sm shadow-lg shadow-indigo-500/20 transition-all active:scale-95">
+                    <button 
+                        onClick={() => window.print()} 
+                        className="flex items-center gap-2 bg-gradient-to-r from-indigo-600 to-violet-600 hover:from-indigo-500 hover:to-violet-500 text-white px-4 py-1.5 rounded-lg font-bold text-sm shadow-lg shadow-indigo-500/20 transition-all active:scale-95"
+                    >
                         <Printer className="w-4 h-4" /> Print Report
                     </button>
                 </div>
@@ -175,7 +181,14 @@ export default function AdminDashboardPage() {
                             {['7D', '30D', '90D', '1Y'].map(tab => (
                                 <button
                                     key={tab}
-                                    onClick={() => setTimeFilter(tab)}
+                                    onClick={() => {
+                                        setTimeFilter(tab);
+                                        // Simulate data fetching or update for "working mode" feel
+                                        setLineChartData(prev => prev.map(d => ({
+                                            ...d,
+                                            value: Math.floor(Math.random() * 80) + 20
+                                        })));
+                                    }}
                                     className={`px-3 py-1 text-xs font-bold rounded-md transition-all ${timeFilter === tab ? 'bg-indigo-500/20 text-indigo-300 shadow-sm' : 'text-slate-500 hover:text-slate-300'}`}
                                 >
                                     {tab}

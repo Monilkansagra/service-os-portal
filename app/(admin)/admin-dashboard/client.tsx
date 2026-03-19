@@ -1,8 +1,8 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useMemo } from "react";
 import {
-  Users, Building2, Server, Activity, Printer, Calendar, ArrowUpRight, ArrowDownRight
+  Users, Building2, Server, Activity, Printer, Calendar, ArrowUpRight, ArrowDownRight, DownloadCloud, AlertTriangle
 } from "lucide-react";
 import { motion } from "framer-motion";
 import {
@@ -46,6 +46,16 @@ const COLORS = {
   red: "#EF4444"
 };
 
+interface FormattedRequest {
+  request_no: string;
+  request_title: string;
+  request_datetime: string | null;
+  assigned_datetime: string | null;
+  dept_name: string;
+  status: string;
+  priority: string;
+}
+
 interface DashboardProps {
   stats: {
     totalUsers: number;
@@ -53,50 +63,133 @@ interface DashboardProps {
     activeServices: number;
     totalRequests: number;
   };
-  initialLineData?: any[];
   initialPieData?: any[];
   initialBarData?: any[];
+  initialHeatmapData?: number[][];
+  requests: FormattedRequest[];
 }
 
-export default function AdminDashboardClient({ stats, initialLineData, initialPieData, initialBarData }: DashboardProps) {
+export default function AdminDashboardClient({ stats, initialPieData, initialBarData, initialHeatmapData, requests = [] }: DashboardProps) {
   const [mounted, setMounted] = useState(false);
   const [lastUpdate, setLastUpdate] = useState("just now");
 
   // Real stats integrated into dynamic metrics
   const [metrics, setMetrics] = useState({
-    activeUsers: { value: stats.totalUsers || 10, trend: +12.5, sparkline: [12, 18, 15, 22, 18, 25, 28], color: COLORS.indigo, icon: Users },
-    departments: { value: stats.departments || 12, trend: +2.4, sparkline: [30, 32, 32, 33, 33, 34, 34], color: COLORS.violet, icon: Building2 },
-    services: { value: stats.activeServices || 10, trend: -1.2, sparkline: [150, 148, 145, 145, 142, 142, 142], color: COLORS.pink, icon: Server },
-    requests: { value: stats.totalRequests || 11, trend: +15.3, sparkline: [70, 80, 95, 85, 110, 120, 135], color: COLORS.emerald, icon: Activity }
+    activeUsers: { value: stats.totalUsers || 0, trend: +12.5, sparkline: [12, 18, 15, 22, 18, 25, 28], color: COLORS.indigo, icon: Users },
+    departments: { value: stats.departments || 0, trend: +2.4, sparkline: [30, 32, 32, 33, 33, 34, 34], color: COLORS.violet, icon: Building2 },
+    services: { value: stats.activeServices || 0, trend: -1.2, sparkline: [150, 148, 145, 145, 142, 142, 142], color: COLORS.pink, icon: Server },
+    requests: { value: stats.totalRequests || 0, trend: +15.3, sparkline: [70, 80, 95, 85, 110, 120, 135], color: COLORS.emerald, icon: Activity }
   });
 
   const [timeFilter, setTimeFilter] = useState("7D");
 
-  const [lineChartData, setLineChartData] = useState(initialLineData || []);
-  const [pieData, setPieData] = useState(initialPieData || []);
+  const lineChartData = useMemo(() => {
+    const today = new Date();
+    today.setHours(23, 59, 59, 999);
+    
+    let daysToSubtract = 6;
+    let formatStr = (d: Date) => ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'][d.getDay()];
+
+    if (timeFilter === "30D") { daysToSubtract = 29; formatStr = (d: Date) => `${d.getDate()} ${['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'][d.getMonth()]}`; }
+    else if (timeFilter === "90D") { daysToSubtract = 89; formatStr = (d: Date) => `${d.getDate()} ${['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'][d.getMonth()]}`; }
+    else if (timeFilter === "1Y") { daysToSubtract = 364; formatStr = (d: Date) => `${['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'][d.getMonth()]} ${d.getFullYear().toString().slice(2)}`; }
+
+    const start = new Date(today);
+    start.setDate(today.getDate() - daysToSubtract);
+    start.setHours(0, 0, 0, 0);
+
+    const map = new Map<string, number>();
+
+    if (timeFilter === "1Y") {
+        for (let i = 11; i >= 0; i--) {
+            const d = new Date(today.getFullYear(), today.getMonth() - i, 1);
+            map.set(formatStr(d), 0);
+        }
+    } else {
+        for (let i = daysToSubtract; i >= 0; i--) {
+            const d = new Date(today);
+            d.setDate(today.getDate() - i);
+            map.set(formatStr(d), 0);
+        }
+    }
+
+    requests.forEach(req => {
+      if (req.request_datetime) {
+        const date = new Date(req.request_datetime);
+        if (date >= start && date <= today) {
+          const key = formatStr(date);
+          if (map.has(key)) {
+            map.set(key, (map.get(key) || 0) + 1);
+          }
+        }
+      }
+    });
+
+    return Array.from(map.entries()).map(([name, value]) => ({ name, value }));
+  }, [requests, timeFilter]);
+
+  const calendarString = useMemo(() => {
+    const end = new Date();
+    const start = new Date();
+    if (timeFilter === "7D") start.setDate(end.getDate() - 6);
+    else if (timeFilter === "30D") start.setDate(end.getDate() - 29);
+    else if (timeFilter === "90D") start.setDate(end.getDate() - 89);
+    else if (timeFilter === "1Y") start.setFullYear(end.getFullYear() - 1);
+    
+    const options: Intl.DateTimeFormatOptions = { month: 'short', day: 'numeric' };
+    if (timeFilter === "1Y") options.year = 'numeric';
+    
+    return `${start.toLocaleDateString('en-US', options)} - ${end.toLocaleDateString('en-US', options)}`;
+  }, [timeFilter]);
+
+  const downloadCSV = () => {
+    if (!requests || requests.length === 0) return;
+    
+    const headers = ["Request No", "Title", "Department", "Request Date", "Assigned Date", "Priority", "Status", "SLA Status"];
+    
+    const rows = requests.map(req => {
+      let slaStatus = "OK";
+      if (req.request_datetime && !['Resolved', 'Closed', 'Completed'].includes(req.status)) {
+        const hours = (new Date().getTime() - new Date(req.request_datetime).getTime()) / (1000 * 60 * 60);
+        if (hours > 3) slaStatus = "Breached";
+      }
+      return [
+        `"${req.request_no}"`,
+        `"${req.request_title.replace(/"/g, '""')}"`,
+        `"${req.dept_name}"`,
+        `"${req.request_datetime ? new Date(req.request_datetime).toLocaleString() : 'N/A'}"`,
+        `"${req.assigned_datetime ? new Date(req.assigned_datetime).toLocaleString() : 'N/A'}"`,
+        `"${req.priority}"`,
+        `"${req.status}"`,
+        `"${slaStatus}"`
+      ].join(",");
+    });
+    
+    const csvContent = "data:text/csv;charset=utf-8," + [headers.join(","), ...rows].join("\n");
+    const encodedUri = encodeURI(csvContent);
+    const link = document.createElement("a");
+    link.setAttribute("href", encodedUri);
+    link.setAttribute("download", `admin_report_${new Date().toISOString().split('T')[0]}.csv`);
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  };
+
+  const slaBreachesCount = useMemo(() => {
+    return requests.filter(req => {
+      if (['Resolved', 'Closed', 'Completed'].includes(req.status)) return false;
+      if (!req.request_datetime) return false;
+      const hours = (new Date().getTime() - new Date(req.request_datetime).getTime()) / (1000 * 60 * 60);
+      return hours > 3; // 3 hour SLA target
+    }).length;
+  }, [requests]);
+
+  const pieData = initialPieData || [];
   const barData = initialBarData || [];
+  const heatmapData = initialHeatmapData || Array.from({ length: 12 }, () => Array(7).fill(0));
 
   useEffect(() => {
     setMounted(true);
-    const interval = setInterval(() => {
-      setLastUpdate("just now");
-
-      setLineChartData(prev => prev.map(d => ({
-        ...d,
-        value: d.value + Math.floor(Math.random() * 20 - 10)
-      })));
-
-      setMetrics(prev => ({
-        ...prev,
-        requests: {
-          ...prev.requests,
-          value: prev.requests.value + Math.floor(Math.random() * 5),
-          sparkline: [...prev.requests.sparkline.slice(1), prev.requests.sparkline[6] + Math.floor(Math.random() * 5)]
-        }
-      }));
-
-    }, 30000);
-    return () => clearInterval(interval);
   }, []);
 
   useEffect(() => {
@@ -135,13 +228,31 @@ export default function AdminDashboardClient({ stats, initialLineData, initialPi
             Last updated: {lastUpdate}
           </div>
 
+          {slaBreachesCount > 0 && (
+            <div className="flex items-center gap-2 bg-red-500/10 border border-red-500/30 rounded-lg px-3 py-1.5 cursor-pointer hover:bg-red-500/20 transition-colors tooltip-trigger" title={`${slaBreachesCount} requests breached 3-hour SLA`}>
+              <AlertTriangle className="w-4 h-4 text-red-400" />
+              <span className="text-sm font-bold text-red-500">{slaBreachesCount} SLA Breaches</span>
+            </div>
+          )}
+
           <div className="flex items-center gap-2 bg-[#13131F] border border-indigo-900/30 rounded-lg px-3 py-1.5 cursor-pointer hover:border-indigo-500/50 transition-colors">
             <Calendar className="w-4 h-4 text-indigo-400" />
-            <span className="text-sm font-medium text-slate-300">Mar 1 - Mar 8</span>
+            <span className="text-sm font-medium text-slate-300">{calendarString}</span>
           </div>
 
-          <button className="flex items-center gap-2 bg-gradient-to-r from-indigo-600 to-violet-600 hover:from-indigo-500 hover:to-violet-500 text-white px-4 py-1.5 rounded-lg font-bold text-sm shadow-lg shadow-indigo-500/20 transition-all active:scale-95">
-            <Printer className="w-4 h-4" /> Print Report
+          <button 
+            onClick={downloadCSV} 
+            className="flex items-center gap-2 bg-emerald-600/20 hover:bg-emerald-600/40 border border-emerald-500/30 text-emerald-400 px-4 py-1.5 rounded-lg font-bold text-sm transition-all active:scale-95"
+            title="Export CSV Report"
+          >
+            <DownloadCloud className="w-4 h-4" /> Export CSV
+          </button>
+
+          <button 
+            onClick={() => window.print()} 
+            className="flex items-center gap-2 bg-gradient-to-r from-indigo-600 to-violet-600 hover:from-indigo-500 hover:to-violet-500 text-white px-4 py-1.5 rounded-lg font-bold text-sm shadow-lg shadow-indigo-500/20 transition-all active:scale-95"
+          >
+            <Printer className="w-4 h-4" /> Print
           </button>
         </div>
       </motion.div>
@@ -205,7 +316,7 @@ export default function AdminDashboardClient({ stats, initialLineData, initialPi
           <div className="h-[320px] w-full relative">
             <div className="absolute inset-0 flex flex-col items-center justify-center p-4">
               <span className="text-slate-500 text-xs font-bold uppercase tracking-widest mt-6">Total</span>
-              <span className="text-3xl font-black text-white">1200</span>
+              <span className="text-3xl font-black text-white">{stats.totalRequests || 0}</span>
             </div>
             <ResponsiveContainer width="100%" height="100%">
               <PieChart>
@@ -274,19 +385,20 @@ export default function AdminDashboardClient({ stats, initialLineData, initialPi
           <div className="flex-1 overflow-x-auto custom-scrollbar pb-2">
             <div className="min-w-[400px]">
               <div className="flex gap-1">
-                {Array.from({ length: 12 }).map((_, col) => (
+                {heatmapData.map((colData, col) => (
                   <div key={col} className="flex flex-col gap-1">
-                    {Array.from({ length: 7 }).map((_, row) => {
-                      const rand = Math.random();
+                    {colData.map((val, row) => {
+                      const maxVal = Math.max(1, ...heatmapData.flat());
+                      const ratio = val / maxVal;
                       const intensityClass =
-                        rand > 0.8 ? 'bg-indigo-500' :
-                          rand > 0.5 ? 'bg-indigo-500/60' :
-                            rand > 0.2 ? 'bg-indigo-500/30' : 'bg-indigo-900/20';
+                        ratio > 0.8 ? 'bg-indigo-500' :
+                          ratio > 0.5 ? 'bg-indigo-500/60' :
+                            ratio > 0 ? 'bg-indigo-500/30' : 'bg-indigo-900/20';
 
                       return (
                         <div
                           key={row}
-                          title={`${Math.floor(rand * 50)} requests`}
+                          title={`${val} requests`}
                           className={`w-3.5 h-3.5 rounded-sm ${intensityClass} cursor-pointer hover:ring-2 hover:ring-white transition-all`}
                         />
                       );

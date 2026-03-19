@@ -24,16 +24,12 @@ export async function loginUser(formData: FormData) {
       return { success: false, message: "Invalid email or password" };
     }
 
-    // Validate credentials (support both hashed and plain-text passwords for dev data)
+    // Validate credentials using bcrypt
     let passwordMatches = false;
     try {
       passwordMatches = await bcrypt.compare(password, user.password);
     } catch {
       passwordMatches = false;
-    }
-
-    if (!passwordMatches && user.password === password) {
-      passwordMatches = true;
     }
 
     if (!passwordMatches) {

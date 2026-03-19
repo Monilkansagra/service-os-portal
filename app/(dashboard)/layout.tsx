@@ -41,6 +41,8 @@ const NAV_GROUPS = [
 
 export default function DashboardLayout({ children }: { children: React.ReactNode }) {
     const [isSidebarOpen, setSidebarOpen] = useState(true);
+    const [isNotificationsOpen, setNotificationsOpen] = useState(false);
+    const [searchQuery, setSearchQuery] = useState("");
     const pathname = usePathname();
 
     return (
@@ -118,7 +120,10 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
 
                 {/* Bottom Section */}
                 <div className="w-full px-3 mt-auto pt-6 border-t border-white/5">
-                    <div className="flex items-center gap-3 px-3 py-3 rounded-xl mb-2 hover:bg-white/5 cursor-pointer group">
+                    <div 
+                        onClick={() => alert("User settings opening...")}
+                        className="flex items-center gap-3 px-3 py-3 rounded-xl mb-2 hover:bg-white/5 cursor-pointer group"
+                    >
                         <div className="w-10 h-10 rounded-full bg-gradient-to-tr from-indigo-500 to-violet-500 flex flex-shrink-0 items-center justify-center text-white shadow-md shadow-indigo-500/20">
                             <User className="w-5 h-5" />
                         </div>
@@ -131,7 +136,11 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
                         </motion.div>
                     </div>
 
-                    <button className="w-full flex items-center gap-3 px-3 py-3 rounded-xl text-red-400 hover:bg-red-500/10 hover:translate-x-[6px] transition-all duration-150 group" title={!isSidebarOpen ? "Sign Out" : undefined}>
+                    <button 
+                        onClick={() => alert("Signing out...")}
+                        className="w-full flex items-center gap-3 px-3 py-3 rounded-xl text-red-400 hover:bg-red-500/10 hover:translate-x-[6px] transition-all duration-150 group" 
+                        title={!isSidebarOpen ? "Sign Out" : undefined}
+                    >
                         <LogOut className="w-5 h-5 flex-shrink-0 text-red-400" />
                         <motion.span animate={{ opacity: isSidebarOpen ? 1 : 0, width: isSidebarOpen ? "auto" : 0 }} className="font-bold whitespace-nowrap overflow-hidden group-hover:text-red-300">
                             Sign Out
@@ -143,21 +152,73 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
             {/* Main Content */}
             <div className="flex-1 flex flex-col h-full overflow-hidden relative bg-[#0F0F1A]">
                 {/* Top Header Banner */}
-                <header className="h-16 bg-[#13131F] border-b border-indigo-900/40 flex items-center justify-between px-8 z-10 sticky top-0 shadow-sm relative">
+                <header className="h-16 bg-[#13131F] border-b border-indigo-900/40 flex items-center justify-between px-8 z-50 sticky top-0 shadow-sm relative">
                     <div className="absolute left-0 top-0 bottom-0 w-1 bg-gradient-to-b from-indigo-500 to-violet-500" />
 
                     <div className="flex-1 max-w-lg">
                         <div className="relative group">
                             <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-500 group-focus-within:text-indigo-400 transition-colors" />
-                            <input type="text" placeholder="Search across AdminOS..." className="w-full pl-10 pr-4 py-2 bg-[#1A1A2E] border border-indigo-900/30 rounded-full text-sm text-white focus:outline-none focus:ring-1 focus:ring-indigo-500 transition-all font-medium placeholder:text-slate-500" />
+                            <input 
+                                type="text" 
+                                value={searchQuery}
+                                onChange={(e) => setSearchQuery(e.target.value)}
+                                placeholder="Search across AdminOS..." 
+                                className="w-full pl-10 pr-4 py-2 bg-[#1A1A2E] border border-indigo-900/30 rounded-full text-sm text-white focus:outline-none focus:ring-1 focus:ring-indigo-500 transition-all font-medium placeholder:text-slate-500" 
+                            />
                         </div>
                     </div>
 
-                    <div className="flex items-center gap-4">
-                        <button className="p-2.5 rounded-full bg-[#1A1A2E] hover:bg-[#232338] border border-indigo-900/30 text-slate-400 hover:text-white transition-colors relative group">
+                    <div className="flex items-center gap-4 relative">
+                        <button 
+                            onClick={() => setNotificationsOpen(!isNotificationsOpen)}
+                            className={`p-2.5 rounded-full ${isNotificationsOpen ? 'bg-[#232338] text-white border-indigo-500/50' : 'bg-[#1A1A2E] text-slate-400 border-indigo-900/30'} hover:bg-[#232338] border hover:text-white transition-colors relative group`}
+                        >
                             <Bell className="w-4 h-4 group-hover:scale-110 transition-transform" />
                             <span className="absolute top-2 right-2.5 w-2 h-2 rounded-full bg-red-500 border border-[#1A1A2E]"></span>
                         </button>
+
+                        {/* Notifications Dropdown */}
+                        <AnimatePresence>
+                            {isNotificationsOpen && (
+                                <motion.div 
+                                    initial={{ opacity: 0, y: 10, scale: 0.95 }}
+                                    animate={{ opacity: 1, y: 0, scale: 1 }}
+                                    exit={{ opacity: 0, y: 10, scale: 0.95 }}
+                                    transition={{ duration: 0.2 }}
+                                    className="absolute top-14 right-0 w-80 bg-[#1A1A2E] border border-indigo-900/40 rounded-2xl shadow-2xl overflow-hidden z-50 text-white"
+                                >
+                                    <div className="p-4 border-b border-indigo-900/30 flex justify-between items-center bg-[#13131F]">
+                                        <h3 className="font-bold text-sm tracking-wide">Notifications</h3>
+                                        <span className="text-xs bg-indigo-500/20 text-indigo-300 px-2 py-0.5 rounded-full font-semibold">2 New</span>
+                                    </div>
+                                    <div className="max-h-80 overflow-y-auto custom-scrollbar">
+                                        <div className="p-4 border-b border-indigo-900/20 hover:bg-[#232338] transition-colors cursor-pointer">
+                                            <p className="text-sm font-medium text-white mb-1">New Service Request</p>
+                                            <p className="text-xs text-slate-400">IT Support required in HR block</p>
+                                            <p className="text-[10px] text-indigo-400 font-semibold mt-2">Just now</p>
+                                        </div>
+                                        <div className="p-4 border-b border-indigo-900/20 hover:bg-[#232338] transition-colors cursor-pointer opacity-70">
+                                            <p className="text-sm font-medium text-slate-300 mb-1">System Update</p>
+                                            <p className="text-xs text-slate-400">AdminOS v2.0 update completed</p>
+                                            <p className="text-[10px] text-slate-500 font-semibold mt-2">2 hours ago</p>
+                                        </div>
+                                        <div className="p-4 hover:bg-[#232338] transition-colors cursor-pointer opacity-70">
+                                            <p className="text-sm font-medium text-slate-300 mb-1">Server Alert</p>
+                                            <p className="text-xs text-slate-400">High CPU usage on Node 3</p>
+                                            <p className="text-[10px] text-slate-500 font-semibold mt-2">Yesterday</p>
+                                        </div>
+                                    </div>
+                                    <div className="p-3 border-t border-indigo-900/30 bg-[#13131F] text-center">
+                                        <button 
+                                            onClick={() => alert("All notifications marked as read")}
+                                            className="text-xs text-indigo-400 hover:text-indigo-300 font-bold tracking-wider uppercase transition-colors"
+                                        >
+                                            Mark All as Read
+                                        </button>
+                                    </div>
+                                </motion.div>
+                            )}
+                        </AnimatePresence>
                     </div>
                 </header>
 

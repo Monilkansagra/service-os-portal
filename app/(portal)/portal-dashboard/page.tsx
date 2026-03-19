@@ -8,6 +8,7 @@ export default async function RequestorPage() {
   const currentUserId = Number(headersList.get("x-user-id")) || 1;
 
   let requests: any[] = [];
+  let requestTypes: any[] = [];
   try {
     const raw = await db.service_request.findMany({
       where: { created_by_user_id: currentUserId },
@@ -34,6 +35,8 @@ export default async function RequestorPage() {
         time: rep.created?.toLocaleTimeString() || ''
       }))
     }));
+
+    requestTypes = await db.service_request_type.findMany();
   } catch (e) {
     console.error("Portal fetch error:", e);
   }
@@ -42,6 +45,7 @@ export default async function RequestorPage() {
     <RequestorDashboardClient
       initialRequests={requests}
       userId={currentUserId}
+      requestTypes={requestTypes}
     />
   );
 }

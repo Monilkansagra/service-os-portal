@@ -1,11 +1,13 @@
 "use client";
-import React from 'react';
+import React, { useState } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { LayoutGrid, BarChart3, LogOut, ChevronRight } from 'lucide-react';
+import { LayoutGrid, BarChart3, LogOut, ChevronRight, Menu, X } from 'lucide-react';
+import { motion, AnimatePresence } from 'framer-motion';
 
 export default function HODSidebar() {
   const pathname = usePathname();
+  const [isOpen, setIsOpen] = useState(false);
 
   // --- LOGOUT FUNCTION ---
   const handleLogout = async () => {
@@ -14,7 +16,34 @@ export default function HODSidebar() {
   };
 
   return (
-    <aside className="fixed left-0 top-0 h-screen w-64 bg-gradient-to-b from-emerald-900 via-emerald-800 to-emerald-900 text-emerald-100 flex flex-col z-50 shadow-2xl border-r border-emerald-700/50 animate-in-left">
+    <>
+      {/* Mobile Top Header */}
+      <div className="md:hidden fixed top-0 left-0 w-full h-14 bg-emerald-950/90 backdrop-blur-md z-[60] flex items-center justify-between px-4 border-b border-emerald-900 shadow-sm text-white">
+        <div className="flex items-center gap-2">
+           <BarChart3 size={18} className="text-emerald-400" />
+           <span className="text-lg font-black tracking-tight">Dept<span className="text-emerald-300">Manager</span></span>
+        </div>
+        <button onClick={() => setIsOpen(!isOpen)} className="p-2 bg-emerald-900 rounded-lg text-emerald-100">
+          <Menu size={20} />
+        </button>
+      </div>
+
+      {/* Mobile Overlay */}
+      <AnimatePresence>
+        {isOpen && (
+           <motion.div 
+             initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+             onClick={() => setIsOpen(false)}
+             className="md:hidden fixed inset-0 bg-slate-900/50 backdrop-blur-sm z-[65]" 
+           />
+        )}
+      </AnimatePresence>
+
+      <aside className={`fixed left-0 top-0 h-screen w-64 bg-gradient-to-b from-emerald-900 via-emerald-800 to-emerald-900 text-emerald-100 flex flex-col z-[70] shadow-2xl border-r border-emerald-700/50 transition-transform duration-300 ${isOpen ? 'translate-x-0' : '-translate-x-full'} md:translate-x-0`}>
+        {/* Mobile close button */}
+        <button onClick={() => setIsOpen(false)} className="md:hidden absolute top-4 right-4 p-2 bg-emerald-800 rounded-full text-emerald-200 hover:text-white transition-colors">
+          <X size={18} />
+        </button>
       <div className="p-8 flex items-center gap-3 border-b border-emerald-700/50 bg-emerald-950/50 backdrop-blur">
         <div className="bg-gradient-to-br from-emerald-400 to-emerald-600 p-2.5 rounded-xl text-white shadow-lg">
           <BarChart3 size={24} />
@@ -42,5 +71,6 @@ export default function HODSidebar() {
         </button>
       </div>
     </aside>
+    </>
   );
 }

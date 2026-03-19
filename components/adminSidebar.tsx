@@ -4,7 +4,7 @@ import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import {
   LayoutDashboard, Building2, UserCog, ListTree,
-  Settings2, Fingerprint, Map, LogOut, ShieldAlert
+  Settings2, Fingerprint, Map, LogOut, ShieldAlert, FileSpreadsheet
 } from 'lucide-react';
 
 export default function AdminSidebar() {
@@ -25,6 +25,7 @@ export default function AdminSidebar() {
     { name: 'Status Master', icon: <Fingerprint size={20} />, href: '/status-master' },
     { name: 'Type Mapping', icon: <Map size={20} />, href: '/type-mapping' },
     { name: 'Person Master', icon: <Map size={20} />, href: '/department-person-master' },
+    { name: 'Reports', icon: <FileSpreadsheet size={20} />, href: '/reports' }
   ];
 
   return (
