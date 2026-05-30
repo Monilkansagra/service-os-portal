@@ -14,6 +14,7 @@ import {
   Tooltip as RechartsTooltip, ResponsiveContainer, Cell,
   PieChart, Pie, Legend
 } from 'recharts';
+import { updateTaskStatus } from './actions';
 
 // CountUp Hook
 function useCountUp(end: number, duration: number = 1500) {
@@ -55,14 +56,14 @@ export default function TechnicianDashboardClient({ initialTasks, currentUserId 
       req.id === task.id ? { ...req, status: newStatus } : req
     ));
     try {
-      const response = await fetch(`/api/requests/${task.realId}`, {
-        method: 'PATCH',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ status_name: newStatus, modified: new Date() })
-      });
-      if (!response.ok) { alert("Failed to update status!"); router.refresh(); }
-      else { router.refresh(); }
-    } catch (e) { alert("Network Error"); }
+      const res = await updateTaskStatus(task.realId, newStatus);
+      if (!res.success) {
+        alert("Failed to update status!"); 
+        router.refresh(); 
+      }
+    } catch (e) { 
+      alert("Network Error"); 
+    }
   };
 
   const handleSendReply = async () => {

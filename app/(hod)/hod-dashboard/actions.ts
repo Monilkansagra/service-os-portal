@@ -74,3 +74,34 @@ export async function approveRequest(requestId: number, userId: number) {
     return { success: false, message: error.message || "Database approval failed" };
   }
 }
+
+// 3. Reject a Request
+export async function rejectRequest(requestId: number, userId: number) {
+  console.log(`➡️ ACTION START: Rejecting Request #${requestId} by User #${userId}`);
+
+  try {
+    // Find correct status ID for 'Rejected' (Fallback to 4 if missing)
+    const statusId = await getStatusId("Reject") || await getStatusId("Cancel") || 4; 
+    console.log(`   - Status 'Rejected' mapped to ID: ${statusId}`);
+
+    // Perform Update
+    await db.service_request.update({
+      where: { request_id: requestId },
+      data: {
+        status_id: statusId,
+        approval_status_datetime: new Date(),
+        approval_status_by_user_id: userId,
+        approval_status_description: "Rejected by HOD", 
+        modified: new Date()
+      }
+    });
+
+    console.log("✅ SUCCESS: Request Rejected.");
+    revalidatePath("/hod-dashboard");
+    return { success: true, message: "Request rejected successfully" };
+
+  } catch (error: any) {
+    console.error("❌ ERROR in rejectRequest:", error);
+    return { success: false, message: error.message || "Database rejection failed" };
+  }
+}

@@ -12,6 +12,7 @@ import {
   DndContext, closestCenter, KeyboardSensor, PointerSensor,
   useSensor, useSensors
 } from "@dnd-kit/core";
+import { approveRequest, rejectRequest, assignRequest } from './actions';
 import {
   arrayMove, SortableContext, sortableKeyboardCoordinates, rectSortingStrategy
 } from "@dnd-kit/sortable";
@@ -69,17 +70,20 @@ export default function HODDashboardClient({ deptName, currentUserId, initialReq
     if (!confirm("Are you sure you want to approve this request?")) return;
     setLoading(true);
     try {
-      const response = await fetch(`/api/requests/${id}`, {
-        method: 'PATCH',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          status_name: 'Approved',
-          approval_status_by_user_id: currentUserId,
-          approval_status_description: 'Approved by HOD'
-        })
-      });
-      if (response.ok) router.refresh();
-      else alert("Error approving request");
+      const res = await approveRequest(id, currentUserId);
+      if (!res.success) alert("Error approving request: " + res.message);
+    } catch (e) {
+      alert("System Error: Unable to connect to server.");
+    }
+    setLoading(false);
+  };
+
+  const handleReject = async (id: number) => {
+    if (!confirm("Are you sure you want to REJECT this request? This cannot be undone.")) return;
+    setLoading(true);
+    try {
+      const res = await rejectRequest(id, currentUserId);
+      if (!res.success) alert("Error rejecting request: " + res.message);
     } catch (e) {
       alert("System Error: Unable to connect to server.");
     }
@@ -90,18 +94,12 @@ export default function HODDashboardClient({ deptName, currentUserId, initialReq
     if (!selectedRequest) return;
     setLoading(true);
     try {
-      const response = await fetch(`/api/requests/${selectedRequest.id}`, {
-        method: 'PATCH',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          status_name: 'Assigned',
-          assigned_to_user_id: techId
-        })
-      });
-      if (response.ok) {
+      const res = await assignRequest(selectedRequest.id, techId);
+      if (res.success) {
         setIsAssignModalOpen(false);
-        router.refresh();
-      } else alert("Error assigning request");
+      } else {
+        alert("Error assigning request: " + res.message);
+      }
     } catch (e) {
       alert("System Error: Unable to connect to server.");
     }
@@ -281,9 +279,14 @@ export default function HODDashboardClient({ deptName, currentUserId, initialReq
 
                             <div className="flex items-center justify-end gap-3 min-w-[140px] border-t md:border-t-0 md:border-l border-slate-100 dark:border-slate-800 pt-4 md:pt-0 md:pl-6">
                               {req.status.includes('Pending') && (
-                                <button onClick={() => handleApprove(req.id)} disabled={loading} className="flex-1 md:flex-none flex items-center justify-center gap-2 px-5 py-2.5 bg-emerald-50 dark:bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 font-bold rounded-xl hover:bg-emerald-100 dark:hover:bg-emerald-500/20 transition-all hover:scale-105 active:scale-95 disabled:opacity-50 border border-emerald-200/50 dark:border-transparent">
-                                  <ThumbsUp size={16} /> Approve
-                                </button>
+                                <>
+                                  <button onClick={() => handleApprove(req.id)} disabled={loading} className="flex-1 md:flex-none flex items-center justify-center gap-2 px-5 py-2.5 bg-emerald-50 dark:bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 font-bold rounded-xl hover:bg-emerald-100 dark:hover:bg-emerald-500/20 transition-all hover:scale-105 active:scale-95 disabled:opacity-50 border border-emerald-200/50 dark:border-transparent">
+                                    <ThumbsUp size={16} /> Approve
+                                  </button>
+                                  <button onClick={() => handleReject(req.id)} disabled={loading} className="flex-1 md:flex-none flex items-center justify-center gap-2 px-5 py-2.5 bg-red-50 dark:bg-red-500/10 text-red-600 dark:text-red-400 font-bold rounded-xl hover:bg-red-100 dark:hover:bg-red-500/20 transition-all hover:scale-105 active:scale-95 disabled:opacity-50 border border-red-200/50 dark:border-transparent">
+                                    <X size={16} /> Reject
+                                  </button>
+                                </>
                               )}
                               {(!req.status.includes('Closed') && !req.status.includes('Resolved')) && (
                                 <button onClick={() => { setSelectedRequest(req); setIsAssignModalOpen(true); }} disabled={loading} className="flex-1 md:flex-none flex items-center justify-center gap-2 px-5 py-2.5 bg-indigo-600 text-white font-bold rounded-xl hover:bg-indigo-700 shadow-md shadow-indigo-500/30 dark:shadow-none transition-all hover:scale-105 active:scale-95 disabled:opacity-50">

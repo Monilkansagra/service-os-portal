@@ -64,7 +64,7 @@ export async function updateTaskStatus(requestId: number, newStatusName: string)
       }
     });
 
-    revalidatePath("/(portal)/technician-dashboard");
+    revalidatePath("/technician");
     return { success: true };
   } catch (error: any) {
     console.error("Update failed:", error);
